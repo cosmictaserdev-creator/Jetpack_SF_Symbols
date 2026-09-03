@@ -56,9 +56,6 @@ afterEvaluate {
         publications {
             register<MavenPublication>("release") {
                 from(components["release"])
-                groupId = "com.github.cosmictaserdev-creator"
-                artifactId = "sf-symbols-compose"
-                version = "1.0.0"
             }
         }
     }
