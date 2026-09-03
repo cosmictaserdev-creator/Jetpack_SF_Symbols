@@ -14,8 +14,7 @@ public data class SfSymbolMetadata(
  * Complete catalog of all 7,007 SF Symbols with search and category indexing.
  */
 public object SfSymbolsCatalog {
-    public val all: List<SfSymbolMetadata> by lazy {
-        listOf(
+    private fun chunk0(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "0.circle.fill", pascalName = "SF0CircleFill", categories = listOf("Indices", "Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "0.circle", pascalName = "SF0Circle", categories = listOf("Draw", "Indices", "Variable"), isRestricted = false),
             SfSymbolMetadata(appleName = "0.square.fill", pascalName = "SF0SquareFill", categories = listOf("Indices", "Multicolor"), isRestricted = false),
@@ -515,7 +514,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "apple.podcasts.pages", pascalName = "SFApplePodcastsPages", categories = listOf(), isRestricted = false),
             SfSymbolMetadata(appleName = "apple.terminal.circle.fill", pascalName = "SFAppleTerminalCircleFill", categories = listOf("Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "apple.terminal.circle", pascalName = "SFAppleTerminalCircle", categories = listOf("Draw", "Variable"), isRestricted = false),
-            SfSymbolMetadata(appleName = "apple.terminal.fill", pascalName = "SFAppleTerminalFill", categories = listOf("Multicolor"), isRestricted = false),
+            SfSymbolMetadata(appleName = "apple.terminal.fill", pascalName = "SFAppleTerminalFill", categories = listOf("Multicolor"), isRestricted = false)
+    )
+
+    private fun chunk1(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "apple.terminal.on.rectangle.fill", pascalName = "SFAppleTerminalOnRectangleFill", categories = listOf("Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "apple.terminal.on.rectangle", pascalName = "SFAppleTerminalOnRectangle", categories = listOf("Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "apple.terminal", pascalName = "SFAppleTerminal", categories = listOf("Multicolor"), isRestricted = false),
@@ -1015,7 +1017,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "arrowshape.zigzag.forward", pascalName = "SFArrowshapeZigzagForward", categories = listOf("Arrows"), isRestricted = false),
             SfSymbolMetadata(appleName = "arrowshape.zigzag.right.fill", pascalName = "SFArrowshapeZigzagRightFill", categories = listOf("Arrows"), isRestricted = false),
             SfSymbolMetadata(appleName = "arrowshape.zigzag.right", pascalName = "SFArrowshapeZigzagRight", categories = listOf("Arrows"), isRestricted = false),
-            SfSymbolMetadata(appleName = "arrowtriangle.backward.circle.fill", pascalName = "SFArrowtriangleBackwardCircleFill", categories = listOf("Arrows", "Multicolor"), isRestricted = false),
+            SfSymbolMetadata(appleName = "arrowtriangle.backward.circle.fill", pascalName = "SFArrowtriangleBackwardCircleFill", categories = listOf("Arrows", "Multicolor"), isRestricted = false)
+    )
+
+    private fun chunk2(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "arrowtriangle.backward.circle", pascalName = "SFArrowtriangleBackwardCircle", categories = listOf("Arrows", "Draw", "Variable"), isRestricted = false),
             SfSymbolMetadata(appleName = "arrowtriangle.backward.fill", pascalName = "SFArrowtriangleBackwardFill", categories = listOf("Arrows"), isRestricted = false),
             SfSymbolMetadata(appleName = "arrowtriangle.backward.inset.filled.trailingthird.rectangle", pascalName = "SFArrowtriangleBackwardInsetFilledTrailingthirdRectangle", categories = listOf("Draw", "Multicolor"), isRestricted = false),
@@ -1515,7 +1520,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "calendar.day.timeline.left", pascalName = "SFCalendarDayTimelineLeft", categories = listOf("Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "calendar.day.timeline.right.circle.fill", pascalName = "SFCalendarDayTimelineRightCircleFill", categories = listOf("Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "calendar.day.timeline.right.circle", pascalName = "SFCalendarDayTimelineRightCircle", categories = listOf("Draw", "Variable"), isRestricted = false),
-            SfSymbolMetadata(appleName = "calendar.day.timeline.right", pascalName = "SFCalendarDayTimelineRight", categories = listOf("Multicolor"), isRestricted = false),
+            SfSymbolMetadata(appleName = "calendar.day.timeline.right", pascalName = "SFCalendarDayTimelineRight", categories = listOf("Multicolor"), isRestricted = false)
+    )
+
+    private fun chunk3(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "calendar.day.timeline.trailing.circle.fill", pascalName = "SFCalendarDayTimelineTrailingCircleFill", categories = listOf("Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "calendar.day.timeline.trailing.circle", pascalName = "SFCalendarDayTimelineTrailingCircle", categories = listOf("Draw", "Variable"), isRestricted = false),
             SfSymbolMetadata(appleName = "calendar.day.timeline.trailing", pascalName = "SFCalendarDayTimelineTrailing", categories = listOf("Multicolor"), isRestricted = false),
@@ -2015,7 +2023,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "chevron.up.right.dotted.2", pascalName = "SFChevronUpRightDotted2", categories = listOf("Arrows", "Fitness"), isRestricted = false),
             SfSymbolMetadata(appleName = "chevron.up.square.fill", pascalName = "SFChevronUpSquareFill", categories = listOf("Arrows", "Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "chevron.up.square", pascalName = "SFChevronUpSquare", categories = listOf("Arrows", "Draw"), isRestricted = false),
-            SfSymbolMetadata(appleName = "chevron.up", pascalName = "SFChevronUp", categories = listOf("Arrows", "Camera & Photos"), isRestricted = false),
+            SfSymbolMetadata(appleName = "chevron.up", pascalName = "SFChevronUp", categories = listOf("Arrows", "Camera & Photos"), isRestricted = false)
+    )
+
+    private fun chunk4(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "chineseyuanrenminbisign.arrow.trianglehead.counterclockwise.rotate.90", pascalName = "SFChineseyuanrenminbisignArrowTriangleheadCounterclockwiseRotate90", categories = listOf("Arrows", "Commerce", "Draw"), isRestricted = false),
             SfSymbolMetadata(appleName = "chineseyuanrenminbisign.bank.building.fill", pascalName = "SFChineseyuanrenminbisignBankBuildingFill", categories = listOf("Commerce", "Multicolor", "Objects & Tools"), isRestricted = false),
             SfSymbolMetadata(appleName = "chineseyuanrenminbisign.bank.building", pascalName = "SFChineseyuanrenminbisignBankBuilding", categories = listOf("Commerce", "Objects & Tools"), isRestricted = false),
@@ -2515,7 +2526,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "door.right.hand.open", pascalName = "SFDoorRightHandOpen", categories = listOf("Home", "Objects & Tools"), isRestricted = false),
             SfSymbolMetadata(appleName = "door.sliding.left.hand.closed", pascalName = "SFDoorSlidingLeftHandClosed", categories = listOf("Home", "Objects & Tools"), isRestricted = false),
             SfSymbolMetadata(appleName = "door.sliding.left.hand.open", pascalName = "SFDoorSlidingLeftHandOpen", categories = listOf("Home", "Objects & Tools"), isRestricted = false),
-            SfSymbolMetadata(appleName = "door.sliding.right.hand.closed", pascalName = "SFDoorSlidingRightHandClosed", categories = listOf("Home", "Objects & Tools"), isRestricted = false),
+            SfSymbolMetadata(appleName = "door.sliding.right.hand.closed", pascalName = "SFDoorSlidingRightHandClosed", categories = listOf("Home", "Objects & Tools"), isRestricted = false)
+    )
+
+    private fun chunk5(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "door.sliding.right.hand.open", pascalName = "SFDoorSlidingRightHandOpen", categories = listOf("Home", "Objects & Tools"), isRestricted = false),
             SfSymbolMetadata(appleName = "dot.arrowtriangles.up.right.down.left.circle", pascalName = "SFDotArrowtrianglesUpRightDownLeftCircle", categories = listOf("Accessibility", "Draw", "Variable"), isRestricted = false),
             SfSymbolMetadata(appleName = "dot.car.top.radiowaves.2.rear.left.rear.rear.right.fill", pascalName = "SFDotCarTopRadiowaves2RearLeftRearRearRightFill", categories = listOf("Automotive", "Variable"), isRestricted = false),
@@ -3015,7 +3029,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "figure.outdoor.cycle", pascalName = "SFFigureOutdoorCycle", categories = listOf("Fitness", "Human"), isRestricted = false),
             SfSymbolMetadata(appleName = "figure.outdoor.rowing.circle.fill", pascalName = "SFFigureOutdoorRowingCircleFill", categories = listOf("Fitness", "Human", "Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "figure.outdoor.rowing.circle", pascalName = "SFFigureOutdoorRowingCircle", categories = listOf("Draw", "Fitness", "Human", "Variable"), isRestricted = false),
-            SfSymbolMetadata(appleName = "figure.outdoor.rowing", pascalName = "SFFigureOutdoorRowing", categories = listOf("Fitness", "Human"), isRestricted = false),
+            SfSymbolMetadata(appleName = "figure.outdoor.rowing", pascalName = "SFFigureOutdoorRowing", categories = listOf("Fitness", "Human"), isRestricted = false)
+    )
+
+    private fun chunk6(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "figure.outdoor.soccer.circle.fill", pascalName = "SFFigureOutdoorSoccerCircleFill", categories = listOf("Fitness", "Human", "Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "figure.outdoor.soccer.circle", pascalName = "SFFigureOutdoorSoccerCircle", categories = listOf("Draw", "Fitness", "Human", "Variable"), isRestricted = false),
             SfSymbolMetadata(appleName = "figure.outdoor.soccer", pascalName = "SFFigureOutdoorSoccer", categories = listOf("Fitness", "Human"), isRestricted = false),
@@ -3515,7 +3532,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "hand.point.up.braille.badge.ellipsis", pascalName = "SFHandPointUpBrailleBadgeEllipsis", categories = listOf("Accessibility", "Human", "Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "hand.point.up.braille.fill", pascalName = "SFHandPointUpBrailleFill", categories = listOf("Accessibility", "Human"), isRestricted = false),
             SfSymbolMetadata(appleName = "hand.point.up.braille", pascalName = "SFHandPointUpBraille", categories = listOf("Accessibility", "Human"), isRestricted = false),
-            SfSymbolMetadata(appleName = "hand.point.up.fill", pascalName = "SFHandPointUpFill", categories = listOf("Accessibility", "Human"), isRestricted = false),
+            SfSymbolMetadata(appleName = "hand.point.up.fill", pascalName = "SFHandPointUpFill", categories = listOf("Accessibility", "Human"), isRestricted = false)
+    )
+
+    private fun chunk7(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "hand.point.up.left.and.text.fill", pascalName = "SFHandPointUpLeftAndTextFill", categories = listOf("Draw", "Human"), isRestricted = false),
             SfSymbolMetadata(appleName = "hand.point.up.left.and.text", pascalName = "SFHandPointUpLeftAndText", categories = listOf("Draw", "Human"), isRestricted = false),
             SfSymbolMetadata(appleName = "hand.point.up.left.fill", pascalName = "SFHandPointUpLeftFill", categories = listOf("Human"), isRestricted = false),
@@ -4015,7 +4035,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "iphone.gen2.radiowaves.left.and.right.circle", pascalName = "SFIphoneGen2RadiowavesLeftAndRightCircle", categories = listOf("Devices", "Draw", "Variable"), isRestricted = true),
             SfSymbolMetadata(appleName = "iphone.gen2.radiowaves.left.and.right", pascalName = "SFIphoneGen2RadiowavesLeftAndRight", categories = listOf("Devices", "Draw", "Variable"), isRestricted = true),
             SfSymbolMetadata(appleName = "iphone.gen2.sizes", pascalName = "SFIphoneGen2Sizes", categories = listOf("Devices"), isRestricted = true),
-            SfSymbolMetadata(appleName = "iphone.gen2.slash.circle.fill", pascalName = "SFIphoneGen2SlashCircleFill", categories = listOf("Devices", "Multicolor"), isRestricted = true),
+            SfSymbolMetadata(appleName = "iphone.gen2.slash.circle.fill", pascalName = "SFIphoneGen2SlashCircleFill", categories = listOf("Devices", "Multicolor"), isRestricted = true)
+    )
+
+    private fun chunk8(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "iphone.gen2.slash.circle", pascalName = "SFIphoneGen2SlashCircle", categories = listOf("Devices", "Draw", "Variable"), isRestricted = true),
             SfSymbolMetadata(appleName = "iphone.gen2.slash", pascalName = "SFIphoneGen2Slash", categories = listOf("Devices"), isRestricted = true),
             SfSymbolMetadata(appleName = "iphone.gen2", pascalName = "SFIphoneGen2", categories = listOf("Devices"), isRestricted = true),
@@ -4515,7 +4538,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "macwindow.and.pointer.arrow", pascalName = "SFMacwindowAndPointerArrow", categories = listOf("Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "macwindow.badge.plus", pascalName = "SFMacwindowBadgePlus", categories = listOf("Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "macwindow.on.rectangle", pascalName = "SFMacwindowOnRectangle", categories = listOf("Multicolor"), isRestricted = false),
-            SfSymbolMetadata(appleName = "macwindow.stack", pascalName = "SFMacwindowStack", categories = listOf("Multicolor"), isRestricted = false),
+            SfSymbolMetadata(appleName = "macwindow.stack", pascalName = "SFMacwindowStack", categories = listOf("Multicolor"), isRestricted = false)
+    )
+
+    private fun chunk9(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "macwindow", pascalName = "SFMacwindow", categories = listOf("Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "magazine.fill", pascalName = "SFMagazineFill", categories = listOf("Objects & Tools"), isRestricted = false),
             SfSymbolMetadata(appleName = "magazine", pascalName = "SFMagazine", categories = listOf("Objects & Tools"), isRestricted = false),
@@ -5015,7 +5041,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "person.bust", pascalName = "SFPersonBust", categories = listOf("Human", "Objects & Tools"), isRestricted = false),
             SfSymbolMetadata(appleName = "person.checkmark.and.xmark", pascalName = "SFPersonCheckmarkAndXmark", categories = listOf("Draw", "Human"), isRestricted = false),
             SfSymbolMetadata(appleName = "person.circle.fill", pascalName = "SFPersonCircleFill", categories = listOf("Human", "Multicolor"), isRestricted = false),
-            SfSymbolMetadata(appleName = "person.circle", pascalName = "SFPersonCircle", categories = listOf("Draw", "Human", "Variable"), isRestricted = false),
+            SfSymbolMetadata(appleName = "person.circle", pascalName = "SFPersonCircle", categories = listOf("Draw", "Human", "Variable"), isRestricted = false)
+    )
+
+    private fun chunk10(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "person.crop.artframe", pascalName = "SFPersonCropArtframe", categories = listOf("Human"), isRestricted = false),
             SfSymbolMetadata(appleName = "person.crop.badge.magnifyingglass.fill", pascalName = "SFPersonCropBadgeMagnifyingglassFill", categories = listOf("Human"), isRestricted = false),
             SfSymbolMetadata(appleName = "person.crop.badge.magnifyingglass", pascalName = "SFPersonCropBadgeMagnifyingglass", categories = listOf("Human"), isRestricted = false),
@@ -5515,7 +5544,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "r.square.on.square", pascalName = "SFRSquareOnSquare", categories = listOf(), isRestricted = false),
             SfSymbolMetadata(appleName = "r.square", pascalName = "SFRSquare", categories = listOf("Draw", "Indices"), isRestricted = false),
             SfSymbolMetadata(appleName = "r1.button.roundedbottom.horizontal.fill", pascalName = "SFR1ButtonRoundedbottomHorizontalFill", categories = listOf("Gaming", "Multicolor"), isRestricted = false),
-            SfSymbolMetadata(appleName = "r1.button.roundedbottom.horizontal", pascalName = "SFR1ButtonRoundedbottomHorizontal", categories = listOf("Gaming"), isRestricted = false),
+            SfSymbolMetadata(appleName = "r1.button.roundedbottom.horizontal", pascalName = "SFR1ButtonRoundedbottomHorizontal", categories = listOf("Gaming"), isRestricted = false)
+    )
+
+    private fun chunk11(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "r1.circle.fill", pascalName = "SFR1CircleFill", categories = listOf("Gaming", "Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "r1.circle", pascalName = "SFR1Circle", categories = listOf("Draw", "Gaming", "Variable"), isRestricted = false),
             SfSymbolMetadata(appleName = "r2.button.angledtop.vertical.right.fill", pascalName = "SFR2ButtonAngledtopVerticalRightFill", categories = listOf("Gaming", "Multicolor"), isRestricted = false),
@@ -6015,7 +6047,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "speaker.wave.1.fill", pascalName = "SFSpeakerWave1Fill", categories = listOf("Draw", "Objects & Tools", "Variable"), isRestricted = false),
             SfSymbolMetadata(appleName = "speaker.wave.1", pascalName = "SFSpeakerWave1", categories = listOf("Draw", "Objects & Tools", "Variable"), isRestricted = false),
             SfSymbolMetadata(appleName = "speaker.wave.2.bubble.fill", pascalName = "SFSpeakerWave2BubbleFill", categories = listOf("Communication", "Multicolor", "Variable"), isRestricted = false),
-            SfSymbolMetadata(appleName = "speaker.wave.2.bubble", pascalName = "SFSpeakerWave2Bubble", categories = listOf("Communication", "Variable"), isRestricted = false),
+            SfSymbolMetadata(appleName = "speaker.wave.2.bubble", pascalName = "SFSpeakerWave2Bubble", categories = listOf("Communication", "Variable"), isRestricted = false)
+    )
+
+    private fun chunk12(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "speaker.wave.2.circle.fill", pascalName = "SFSpeakerWave2CircleFill", categories = listOf("Multicolor", "Objects & Tools", "Variable"), isRestricted = false),
             SfSymbolMetadata(appleName = "speaker.wave.2.circle", pascalName = "SFSpeakerWave2Circle", categories = listOf("Draw", "Objects & Tools", "Variable"), isRestricted = false),
             SfSymbolMetadata(appleName = "speaker.wave.2.fill", pascalName = "SFSpeakerWave2Fill", categories = listOf("Draw", "Objects & Tools", "Variable"), isRestricted = false),
@@ -6515,7 +6550,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "theatermasks.fill", pascalName = "SFTheatermasksFill", categories = listOf("Objects & Tools"), isRestricted = false),
             SfSymbolMetadata(appleName = "theatermasks", pascalName = "SFTheatermasks", categories = listOf("Objects & Tools"), isRestricted = false),
             SfSymbolMetadata(appleName = "thermometer.and.ellipsis", pascalName = "SFThermometerAndEllipsis", categories = listOf("Home", "Variable"), isRestricted = false),
-            SfSymbolMetadata(appleName = "thermometer.and.liquid.waves.snowflake", pascalName = "SFThermometerAndLiquidWavesSnowflake", categories = listOf("Automotive", "Draw"), isRestricted = false),
+            SfSymbolMetadata(appleName = "thermometer.and.liquid.waves.snowflake", pascalName = "SFThermometerAndLiquidWavesSnowflake", categories = listOf("Automotive", "Draw"), isRestricted = false)
+    )
+
+    private fun chunk13(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "thermometer.and.liquid.waves", pascalName = "SFThermometerAndLiquidWaves", categories = listOf("Automotive"), isRestricted = false),
             SfSymbolMetadata(appleName = "thermometer.and.liquid.waves.trianglebadge.exclamationmark", pascalName = "SFThermometerAndLiquidWavesTrianglebadgeExclamationmark", categories = listOf("Automotive", "Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "thermometer.brakesignal", pascalName = "SFThermometerBrakesignal", categories = listOf("Automotive", "Multicolor"), isRestricted = false),
@@ -7015,7 +7053,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "yieldsign", pascalName = "SFYieldsign", categories = listOf("Automotive", "Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "z.circle.fill", pascalName = "SFZCircleFill", categories = listOf("Gaming", "Indices", "Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "z.circle", pascalName = "SFZCircle", categories = listOf("Draw", "Gaming", "Indices", "Variable"), isRestricted = false),
-            SfSymbolMetadata(appleName = "z.square.fill", pascalName = "SFZSquareFill", categories = listOf("Indices", "Multicolor"), isRestricted = false),
+            SfSymbolMetadata(appleName = "z.square.fill", pascalName = "SFZSquareFill", categories = listOf("Indices", "Multicolor"), isRestricted = false)
+    )
+
+    private fun chunk14(): List<SfSymbolMetadata> = listOf(
             SfSymbolMetadata(appleName = "z.square", pascalName = "SFZSquare", categories = listOf("Draw", "Indices"), isRestricted = false),
             SfSymbolMetadata(appleName = "zipper.page", pascalName = "SFZipperPage", categories = listOf(), isRestricted = false),
             SfSymbolMetadata(appleName = "zl.button.roundedtop.horizontal.fill", pascalName = "SFZlButtonRoundedtopHorizontalFill", categories = listOf("Gaming", "Multicolor"), isRestricted = false),
@@ -7023,7 +7064,10 @@ public object SfSymbolsCatalog {
             SfSymbolMetadata(appleName = "zr.button.roundedtop.horizontal.fill", pascalName = "SFZrButtonRoundedtopHorizontalFill", categories = listOf("Gaming", "Multicolor"), isRestricted = false),
             SfSymbolMetadata(appleName = "zr.button.roundedtop.horizontal", pascalName = "SFZrButtonRoundedtopHorizontal", categories = listOf("Gaming"), isRestricted = false),
             SfSymbolMetadata(appleName = "zzz", pascalName = "SFZzz", categories = listOf(), isRestricted = false)
-        )
+    )
+
+    public val all: List<SfSymbolMetadata> by lazy {
+        chunk0() + chunk1() + chunk2() + chunk3() + chunk4() + chunk5() + chunk6() + chunk7() + chunk8() + chunk9() + chunk10() + chunk11() + chunk12() + chunk13() + chunk14()
     }
 
     private val nameIndex: Map<String, SfSymbolMetadata> by lazy {
