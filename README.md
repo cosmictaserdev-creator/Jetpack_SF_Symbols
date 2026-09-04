@@ -55,7 +55,7 @@ Add the dependency to your application's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.cosmictaserdev-creator.Jetpack_SF_Symbols:sfsymbols:1.0.0")
+    implementation("com.github.cosmictaserdev-creator:Jetpack_SF_Symbols:1.0.3")
 }
 ```
 
