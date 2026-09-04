@@ -56,6 +56,9 @@ afterEvaluate {
         publications {
             register<MavenPublication>("release") {
                 from(components["release"])
+                groupId = "com.github.cosmictaserdev-creator.Jetpack_SF_Symbols"
+                artifactId = "sfsymbols"
+                version = System.getenv("VERSION") ?: "1.0.0"
             }
         }
     }
