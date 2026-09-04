@@ -58,7 +58,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.cosmictaserdev-creator.Jetpack_SF_Symbols"
                 artifactId = "sfsymbols"
-                version = System.getenv("VERSION") ?: "1.0.0"
+                version = (findProperty("version") as String?)?.takeIf { it != "unspecified" } ?: "1.0.0"
             }
         }
     }
