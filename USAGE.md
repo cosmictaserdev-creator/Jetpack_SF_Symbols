@@ -158,6 +158,11 @@ fun NavigationBarExample() {
 
 ## 4. Styling and Modifiers
 
+Symbols preserve their original aspect ratio, with their longest side set to `24.dp` by default.
+With Material 3 `Icon`, `Modifier.size(24.dp)` defines a square layout slot; wide and tall symbols
+fit inside that slot without stretching. Use a smaller size, such as `20.dp`, to reduce the icon.
+When drawing a vector directly on a Canvas, fit it uniformly to the available space as well.
+
 Icons accept all standard Compose layout and drawing modifiers:
 
 ```kotlin
@@ -221,6 +226,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import com.composables.sfsymbols.SfSymbols
@@ -231,8 +238,13 @@ fun CanvasRenderedSymbol() {
     val vectorPainter = rememberVectorPainter(image = SfSymbols.Dualtone.SFHeartFill)
 
     Canvas(modifier = Modifier.size(64.dp)) {
-        with(vectorPainter) {
-            draw(size = size)
+        val intrinsicSize = vectorPainter.intrinsicSize
+        val scale = minOf(size.width / intrinsicSize.width, size.height / intrinsicSize.height)
+        val fittedSize = Size(intrinsicSize.width * scale, intrinsicSize.height * scale)
+        translate((size.width - fittedSize.width) / 2f, (size.height - fittedSize.height) / 2f) {
+            with(vectorPainter) {
+                draw(size = fittedSize)
+            }
         }
     }
 }

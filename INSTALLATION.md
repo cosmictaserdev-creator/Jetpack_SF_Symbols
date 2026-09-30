@@ -36,7 +36,7 @@ In your module `build.gradle.kts` (e.g., `app/build.gradle.kts`):
 ```kotlin
 dependencies {
     // SF Symbols Compose Core Library
-    implementation("com.github.cosmictaserdev-creator:Jetpack_SF_Symbols:1.0.3")
+    implementation("com.github.cosmictaserdev-creator:Jetpack_SF_Symbols:1.0.4")
 
     // Compose Dependencies
     implementation(platform("androidx.compose:compose-bom:2025.02.00"))
