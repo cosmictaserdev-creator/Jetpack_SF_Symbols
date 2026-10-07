@@ -31,20 +31,19 @@ dependencyResolutionManagement {
 ```
 
 ### Step 2: Add Dependency
-In your module `build.gradle.kts` (e.g., `app/build.gradle.kts`):
+In a Kotlin Multiplatform module's `build.gradle.kts`, add the library to `commonMain` so Gradle selects the matching Android, JVM, iOS, JavaScript, or WebAssembly artifact:
 
 ```kotlin
-dependencies {
-    // SF Symbols Compose Core Library
-    implementation("com.github.cosmictaserdev-creator:Jetpack_SF_Symbols:1.0.4")
-
-    // Compose Dependencies
-    implementation(platform("androidx.compose:compose-bom:2025.02.00"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.material3:material3")
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            api("com.github.cosmictaserdev-creator.Jetpack_SF_Symbols:sfsymbols:KMP_RELEASE_TAG")
+        }
+    }
 }
 ```
+
+Replace `KMP_RELEASE_TAG` with the tag for a release that contains the KMP build. Version `1.0.4` predates the multiplatform artifacts. For Android-only projects, use the same coordinate with `implementation(...)` in the app module's dependencies block.
 
 ### Step 3: Sync Gradle
 Select **Sync Project with Gradle Files** in Android Studio.
@@ -96,7 +95,7 @@ In your application's `settings.gradle.kts`:
 ```kotlin
 includeBuild("../Jetpack_SF_Symbols") {
     dependencySubstitution {
-        substitute(module("com.github.cosmictaserdev-creator:Jetpack_SF_Symbols"))
+        substitute(module("com.github.cosmictaserdev-creator.Jetpack_SF_Symbols:sfsymbols"))
             .using(project(":sfsymbols"))
     }
 }

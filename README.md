@@ -4,6 +4,8 @@
 
 <h1 align="center">SF Symbols for Jetpack Compose</h1>
 
+**Browse symbols on your PC:** [Download the ready-to-use SF Symbol Catalog](https://github.com/cosmictaserdev-creator/SF_Symbol_Catalog/releases/latest) for Windows, macOS, or Linux. Search symbols, save favorites, preview variants, then copy a symbol name or Compose snippet for this library. See the [catalog source and usage](https://github.com/cosmictaserdev-creator/SF_Symbol_Catalog).
+
 <p align="center">
   All 7,007 Apple SF Symbols as native <code>ImageVector</code>s for Android and Compose Multiplatform.
 </p>
@@ -43,7 +45,7 @@
 
 **Costs nothing you do not use.** Icons are built lazily on first use, and R8 removes every symbol your code never references.
 
-**Runs everywhere Compose runs.** Android (minSdk 21), Desktop, iOS and Web.
+**Cross-platform.** Android (minSdk 21), JVM desktop, iOS devices and Apple silicon simulators, JavaScript, and WebAssembly.
 
 ## Install
 
@@ -59,13 +61,19 @@ dependencyResolutionManagement {
 }
 ```
 
-**2. Add the dependency** to your app module's `build.gradle.kts`:
+**2. Add the dependency** to your KMP module's `build.gradle.kts`:
 
 ```kotlin
-dependencies {
-    implementation("com.github.cosmictaserdev-creator:Jetpack_SF_Symbols:1.0.4")
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            api("com.github.cosmictaserdev-creator.Jetpack_SF_Symbols:sfsymbols:KMP_RELEASE_TAG")
+        }
+    }
 }
 ```
+
+Replace `1.0.4` with the tag for a release that contains the KMP build; version `1.0.4` predates the multiplatform artifacts. For an Android-only app, use the same coordinate in its `dependencies { implementation(...) }` block.
 
 **3. Sync Gradle.** That is it.
 

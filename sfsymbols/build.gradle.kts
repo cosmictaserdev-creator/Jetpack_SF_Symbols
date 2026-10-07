@@ -1,63 +1,45 @@
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.multiplatform.library)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.compose.multiplatform)
     id("maven-publish")
 }
 
-android {
-    namespace = "com.composables.sfsymbols"
-    compileSdk = 35
-
-    defaultConfig {
+kotlin {
+    android {
+        namespace = "com.composables.sfsymbols"
+        compileSdk = 35
         minSdk = 21
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+    jvm()
+
+    iosArm64()
+    iosSimulatorArm64()
+
+    js {
+        browser()
+        nodejs()
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
+        nodejs()
     }
 
-    buildFeatures {
-        compose = true
-    }
-
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
+    sourceSets {
+        commonMain.dependencies {
+            api(libs.compose.ui)
+            api(libs.compose.ui.graphics)
         }
-    }
-}
 
-dependencies {
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    testImplementation("junit:junit:4.13.2")
-}
-
-afterEvaluate {
-    publishing {
-        publications {
-            register<MavenPublication>("release") {
-                from(components["release"])
-            }
+        jvmTest.dependencies {
+            implementation(kotlin("test-junit"))
         }
     }
 }
