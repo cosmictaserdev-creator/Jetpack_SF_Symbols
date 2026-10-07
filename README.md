@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/hero.png" alt="SF Symbols rendered in Jetpack Compose" width="100%">
+</p>
+
 <h1 align="center">SF Symbols for Jetpack Compose</h1>
 
 <p align="center">
@@ -129,7 +133,22 @@ SfSymbolsCatalog.findByAppleName("square.and.arrow.up")  // name, categories, re
 
 ## Support
 
-If this saves you time, you can support the work on [Ko-fi](https://ko-fi.com/cosmictaser), say hi on [Discord](https://discord.gg/Ejeb4cmzfd), or visit [cosmictaser.de5.net](https://cosmictaser.de5.net).
+<p align="center">
+  This library is free and built in spare time.<br>
+  If it saved you an afternoon of exporting SVGs, a coffee keeps the updates coming.
+</p>
+
+<p align="center">
+  <a href="https://ko-fi.com/cosmictaser"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white" alt="Support on Ko-fi" height="36"></a>
+  &nbsp;
+  <a href="https://discord.gg/Ejeb4cmzfd"><img src="https://img.shields.io/badge/Join%20the%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join the Discord" height="36"></a>
+  &nbsp;
+  <a href="https://cosmictaser.de5.net"><img src="https://img.shields.io/badge/Website-111111?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Website" height="36"></a>
+</p>
+
+<p align="center">
+  <sub>No money to spare? A star on this repo helps other developers find it.</sub>
+</p>
 
 ## Credits and license
 
