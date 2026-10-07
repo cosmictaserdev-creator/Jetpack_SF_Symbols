@@ -7,6 +7,12 @@
 **Browse symbols on your PC:** [Download the ready-to-use SF Symbol Catalog](https://github.com/cosmictaserdev-creator/SF_Symbol_Catalog/releases/latest) for Windows, macOS, or Linux. Search symbols, save favorites, preview variants, then copy a symbol name or Compose snippet for this library. See the [catalog source and usage](https://github.com/cosmictaserdev-creator/SF_Symbol_Catalog).
 
 <p align="center">
+  <a href="https://github.com/cosmictaserdev-creator/SF_Symbol_Catalog">
+    <img src="docs/images/sf-symbol-catalog.png" alt="SF Symbol Catalog desktop app" width="100%">
+  </a>
+</p>
+
+<p align="center">
   All 7,007 Apple SF Symbols as native <code>ImageVector</code>s for Android and Compose Multiplatform.
 </p>
 
