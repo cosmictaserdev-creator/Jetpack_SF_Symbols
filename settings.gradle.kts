@@ -24,4 +24,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "SfSymbolsCompose"
 include(":sfsymbols")
-include(":sample")

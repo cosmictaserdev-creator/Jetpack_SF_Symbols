@@ -1,48 +1,52 @@
-# SF Symbols for Jetpack Compose
+<h1 align="center">SF Symbols for Jetpack Compose</h1>
 
-A high-performance Jetpack Compose and Compose Multiplatform icon library bringing all 7,007 Apple SF Symbols to Android and Kotlin Multiplatform applications as pure, tree-shakeable `ImageVector` definitions.
+<p align="center">
+  All 7,007 Apple SF Symbols as native <code>ImageVector</code>s for Android and Compose Multiplatform.
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.1.0-purple.svg?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org)
-[![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-2025.02.00-green.svg?style=flat-square&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
-[![SF Symbols](https://img.shields.io/badge/SF%20Symbols-7.3%20(7007)-black.svg?style=flat-square&logo=apple&logoColor=white)](https://developer.apple.com/sf-symbols/)
-[![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-Support-FF5E5B.svg?style=flat-square&logo=kofi&logoColor=white)](https://ko-fi.com/cosmictaser)
-[![Website](https://img.shields.io/badge/Website-cosmictaser.de5.net-8A2BE2.svg?style=flat-square&logo=googlechrome&logoColor=white)](https://cosmictaser.de5.net)
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="MIT License"></a>
+  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.x-7F52FF.svg?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin"></a>
+  <a href="https://developer.android.com/jetpack/compose"><img src="https://img.shields.io/badge/Jetpack%20Compose-2025.02-4285F4.svg?style=flat-square&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose"></a>
+  <a href="https://developer.apple.com/sf-symbols/"><img src="https://img.shields.io/badge/SF%20Symbols-7-000000.svg?style=flat-square&logo=apple&logoColor=white" alt="SF Symbols 7"></a>
+  <a href="https://jitpack.io/#cosmictaserdev-creator/Jetpack_SF_Symbols"><img src="https://img.shields.io/badge/JitPack-1.0.4-2DCE89.svg?style=flat-square" alt="JitPack"></a>
+</p>
 
----
+<p align="center">
+  <a href="#install">Install</a> &nbsp;&middot;&nbsp;
+  <a href="#use">Use</a> &nbsp;&middot;&nbsp;
+  <a href="#find-a-symbol">Find a symbol</a> &nbsp;&middot;&nbsp;
+  <a href="USAGE.md">Full guide</a>
+</p>
 
-## Overview
+<br>
 
-SF Symbols for Jetpack Compose is a vector icon framework engineered specifically for modern Android and Compose Multiplatform development. It provides access to the complete SF Symbols collection (7,007 symbols in Dualtone and Monochrome variants, totaling 14,014 generated vectors) with native `ImageVector` performance, zero memory overhead at startup, and complete R8/ProGuard dead-code elimination.
+<table>
+  <tr>
+    <td width="33%"><img src="docs/images/whispry-home.png" alt="Whispry home screen"></td>
+    <td width="33%"><img src="docs/images/whispry-presets.png" alt="Whispry presets screen"></td>
+    <td width="33%"><img src="docs/images/whispry-settings.png" alt="Whispry settings screen"></td>
+  </tr>
+</table>
 
-Designed to mirror the official `androidx.compose.material.icons.Icons` API conventions, this library delivers seamless autocompletion, effortless theming, and dynamic tinting.
+<p align="center"><sub>Whispry, a voice dictation app for Android, built with SF Symbols for Compose.</sub></p>
 
-### Keywords
-`jetpack-compose-sf-symbols`, `sf-symbols-android`, `compose-multiplatform-icons`, `apple-sf-symbols-compose`, `sf-symbols-kotlin`, `compose-vector-icons`, `android-sf-symbols`, `ios-icons-for-android`, `sf-symbols-library`
+## Why this library
 
----
+**Every symbol.** The full SF Symbols 7 set, 7,007 symbols, each in a Dualtone and a Monochrome version.
 
-## Key Highlights
+**Feels like Material Icons.** Same shape of API as `Icons.Filled.Home`, so autocomplete just works: `SfSymbols.Dualtone.SFHouseFill`.
 
-- **Complete Collection (7,007 Symbols)**: Full coverage of the SF Symbols 7 dataset with high-precision vector paths.
-- **Dualtone and Monochrome Modes**: Dualtone mode provides layered visual depth using alpha channels (`0.21` secondary and `0.85` primary fills), while Monochrome mode delivers clean flat geometry.
-- **Zero Startup Allocation**: Every icon uses private backing properties and is only instantiated upon first render.
-- **Automatic Dead-Code Stripping**: Release builds compiled with R8 / ProGuard will strip out every icon that is not explicitly referenced in your code.
-- **Compose Multiplatform Ready**: Fully compatible with Android (`minSdk 21`), Compose Desktop (JVM), iOS, and Web (Wasm/JS).
-- **Searchable Metadata Catalog**: Built-in runtime lookup index (`SfSymbolsCatalog`) with Apple symbol name mapping, categories, and restriction statuses.
-- **Interactive Visual Browser**: Includes a standalone, offline-ready HTML vector catalog browser (`preview.html`) for previewing all 7,007 icons directly in VS Code or web browsers.
+**Costs nothing you do not use.** Icons are built lazily on first use, and R8 removes every symbol your code never references.
 
----
+**Runs everywhere Compose runs.** Android (minSdk 21), Desktop, iOS and Web.
 
-## Installation
+## Install
 
-### Gradle (Kotlin DSL)
-
-Add the JitPack repository to your `settings.gradle.kts`:
+**1. Add JitPack** to `settings.gradle.kts`:
 
 ```kotlin
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
@@ -51,7 +55,7 @@ dependencyResolutionManagement {
 }
 ```
 
-Add the dependency to your application's `build.gradle.kts`:
+**2. Add the dependency** to your app module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
@@ -59,135 +63,76 @@ dependencies {
 }
 ```
 
-*For detailed setup instructions (including local module import), refer to [INSTALLATION.md](INSTALLATION.md).*
+**3. Sync Gradle.** That is it.
 
----
+Prefer to vendor the source or use a composite build? See [INSTALLATION.md](INSTALLATION.md).
 
-## Quick Start
+## Use
+
+Pass a symbol to the regular Compose `Icon`:
 
 ```kotlin
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.composables.sfsymbols.SfSymbols
 import com.composables.sfsymbols.dualtone.SFHeartFill
-import com.composables.sfsymbols.dualtone.SFCheckmarkCircleFill
-import com.composables.sfsymbols.monochrome.SFStarFill
-
-@Composable
-fun QuickStartExample() {
-    // Dualtone Icon (Depth with layered opacities)
-    Icon(
-        imageVector = SfSymbols.Dualtone.SFHeartFill,
-        contentDescription = "Favorite",
-        tint = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.size(28.dp)
-    )
-
-    // Dualtone Icon with custom color tint
-    Icon(
-        imageVector = SfSymbols.Dualtone.SFCheckmarkCircleFill,
-        contentDescription = "Completed",
-        tint = Color(0xFF34C759),
-        modifier = Modifier.size(24.dp)
-    )
-
-    // Monochrome Icon (Flat fill)
-    Icon(
-        imageVector = SfSymbols.Monochrome.SFStarFill,
-        contentDescription = "Star",
-        tint = Color(0xFFFF9500),
-        modifier = Modifier.size(24.dp)
-    )
-}
-```
-
----
-
-## Render Variants
-
-### Dualtone (Default)
-Dualtone renders multi-layer vectors with subtle opacity shifts. When passing a `tint` color, both layers blend proportionally against the tint:
-
-```kotlin
-import com.composables.sfsymbols.SfSymbols
-import com.composables.sfsymbols.dualtone.SFFolderFill
 
 Icon(
-    imageVector = SfSymbols.Dualtone.SFFolderFill,
-    contentDescription = "Folder",
-    tint = Color(0xFF007AFF)
+    imageVector = SfSymbols.Dualtone.SFHeartFill,
+    contentDescription = "Favorite",
+    tint = Color(0xFFFF375F),
+    modifier = Modifier.size(28.dp)
 )
 ```
 
-### Monochrome
-Monochrome renders a solid, single-layer vector shape:
+Size it with `Modifier.size`, color it with `tint`. Nothing else to learn.
+
+### Dualtone or Monochrome
+
+Every symbol comes in two styles. Pick one by changing the package.
+
+| Style | Import from | Looks like |
+| :--- | :--- | :--- |
+| Dualtone | `com.composables.sfsymbols.dualtone` | Two layers of the same tint at different opacity. Closest to Apple's hierarchical style. |
+| Monochrome | `com.composables.sfsymbols.monochrome` | One solid shape. Best for small sizes and toolbars. |
 
 ```kotlin
-import com.composables.sfsymbols.SfSymbols
 import com.composables.sfsymbols.monochrome.SFFolderFill
 
-Icon(
-    imageVector = SfSymbols.Monochrome.SFFolderFill,
-    contentDescription = "Folder",
-    tint = Color(0xFF007AFF)
-)
+Icon(SfSymbols.Monochrome.SFFolderFill, contentDescription = "Folder")
 ```
 
----
+## Find a symbol
 
-## In-App Search & Runtime Catalog
+**Turn the Apple name into the Kotlin name.** Drop the dots, capitalize each word, add `SF` in front.
 
-SF Symbols Compose includes `SfSymbolsCatalog` for in-app icon pickers, searches, and Apple symbol identifier resolution:
+| Apple name | Kotlin name |
+| :--- | :--- |
+| `heart.fill` | `SFHeartFill` |
+| `square.and.arrow.up` | `SFSquareAndArrowUp` |
+| `figure.outdoor.cycle` | `SFFigureOutdoorCycle` |
+| `battery.100percent` | `SFBattery100percent` |
+
+**Browse visually.** Search the [SF Symbols app](https://developer.apple.com/sf-symbols/) on a Mac, then convert the name with the rule above.
+
+**Search at runtime.** `SfSymbolsCatalog` lets you build your own icon picker:
 
 ```kotlin
 import com.composables.sfsymbols.SfSymbolsCatalog
 
-// Search for symbols matching a keyword
-val results = SfSymbolsCatalog.search("wifi")
-
-// Resolve metadata from an Apple SF Symbol name
-val symbol = SfSymbolsCatalog.findByAppleName("square.and.arrow.up")
-// symbol?.pascalName == "SFSquareAndArrowUp"
-// symbol?.categories == ["General", "Share"]
+SfSymbolsCatalog.search("wifi")                          // every symbol matching "wifi"
+SfSymbolsCatalog.findByAppleName("square.and.arrow.up")  // name, categories, restriction flag
 ```
 
----
+## More docs
 
-## Documentation
+* [INSTALLATION.md](INSTALLATION.md) covers local modules, composite builds and R8.
+* [USAGE.md](USAGE.md) covers Material 3 buttons, navigation bars, custom Canvas drawing and Multiplatform.
 
-- **[Installation Guide (INSTALLATION.md)](INSTALLATION.md)**: Gradle setup, composite builds, local module imports, and ProGuard configuration.
-- **[Usage Guide (USAGE.md)](USAGE.md)**: Material 3 integration (Buttons, Navigation Bars, FABs), custom Canvas drawing, and Multiplatform guidelines.
-- **[Interactive Catalog (preview.html)](preview.html)**: Standalone 7,007-symbol visual search browser for VS Code and web browsers.
+## Support
 
----
+If this saves you time, you can support the work on [Ko-fi](https://ko-fi.com/cosmictaser), say hi on [Discord](https://discord.gg/Ejeb4cmzfd), or visit [cosmictaser.de5.net](https://cosmictaser.de5.net).
 
-## Supporting the Project
+## Credits and license
 
-If you find this library useful in your projects, consider supporting its continued maintenance and development:
+Built on [`sf-symbols-lib`](https://github.com/phranck/sf-symbols-lib) by [phranck](https://github.com/phranck) and [sf-symbols-lib-jetpackCompose](https://github.com/cosmictaserdev-creator/sf-symbols-lib-jetpackCompose).
 
-- **Ko-fi**: [ko-fi.com/cosmictaser](https://ko-fi.com/cosmictaser)
-- **UPI Support**: Available via Ko-fi or direct UPI
-- **Website**: [cosmictaser.de5.net](https://cosmictaser.de5.net)
-- **Discord Community**: [Join the Discord](https://discord.gg/Ejeb4cmzfd)
-
----
-
-## Attribution & Credits
-
-- **Upstream Origin**: Derived and transformed from [`sf-symbols-lib`](https://github.com/phranck/sf-symbols-lib) by [phranck](https://github.com/phranck) and the [sf-symbols-lib-jetpackCompose](https://github.com/cosmictaserdev-creator/sf-symbols-lib-jetpackCompose) repository.
-- **Symbol Design**: SF Symbols glyph design, naming hierarchy, and vector curves are copyrighted by Apple Inc.
-
----
-
-## Legal Disclaimer
-
-This library is developed strictly for **educational, interoperability, and design research purposes**.
-
-SF Symbols is a trademark of Apple Inc. Please review Apple's [SF Symbols License Agreement](https://developer.apple.com/sf-symbols/) regarding proper usage guidelines in non-Apple software environments.
-
-The code generator and Kotlin wrapper bindings are open-sourced under the [MIT License](LICENSE).
+The generator and Kotlin bindings are released under the [MIT License](LICENSE). The symbol artwork belongs to Apple Inc. and SF Symbols is an Apple trademark. Read Apple's [SF Symbols license](https://developer.apple.com/sf-symbols/) before shipping these icons in a product, since it limits their use outside Apple platforms. This project is meant for education, interoperability and design research.

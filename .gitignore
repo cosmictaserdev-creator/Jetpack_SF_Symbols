@@ -13,3 +13,10 @@ converter_test.js
 test_parser.js
 inspect.js
 generate_catalog.js
+build/
+.kotlin
+.codegraph/
+.claude/
+.vscode/
+scripts/
+preview.html
