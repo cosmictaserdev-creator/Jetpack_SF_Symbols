@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
@@ -21,11 +22,12 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlin.math.abs
 import kotlin.math.hypot
@@ -37,18 +39,25 @@ public enum class SfSymbolTransition {
     /** Swap instantly. */
     None,
 
-    /** Old symbol scales/fades out while the new one scales/fades in. */
+    /** Old symbol disappears, then the new one appears (Apple's down-up recipe). */
     Replace,
 
-    /** Morphs outline-to-outline when both symbols share a structure, otherwise behaves like [Replace]. */
+    /**
+     * Like [Replace], but layers that carry the same Apple tag in both symbols (and the same outline structure)
+     * morph into each other instead of fading.
+     */
     MagicReplace,
 }
 
 /**
- * Draws an SF Symbol with weight, rendering mode and (optionally) a symbol effect.
+ * Draws an SF Symbol with weight, scale, rendering mode and (optionally) a symbol effect.
  *
- * @param size larger side of the symbol, in dp (the composable itself is a square of this size).
+ * @param size larger side of the Medium-scale symbol, in dp (the composable itself is a square of this size).
+ * @param scale optical size variant; [SfScale.Small] / [SfScale.Large] draw smaller / larger than Medium.
  * @param palette colours for [SfRenderingMode.Palette], primary first. Missing levels reuse the last one.
+ * @param gradient fills colours with Apple's automatic gradient (lighter at the top) instead of a flat colour.
+ * @param variableValue 0..1 fill for symbols with variable layers (e.g. wifi bars, speaker waves); null = full.
+ * @param mirrorInRtl flips symbols Apple marks as mirroring in right-to-left layouts.
  * @param effect animation to play, or null.
  * @param repeat how often it plays; null = the effect's natural behaviour (Breathe loops, others play once).
  * @param trigger discrete effects replay whenever this value changes.
@@ -62,9 +71,13 @@ public fun SfSymbolIcon(
     modifier: Modifier = Modifier,
     size: Dp = 24.dp,
     weight: SfWeight = SfWeight.Regular,
+    scale: SfScale = SfScale.Medium,
     mode: SfRenderingMode = SfRenderingMode.Monochrome,
     tint: Color = Color.Black,
     palette: List<Color> = emptyList(),
+    gradient: Boolean = false,
+    variableValue: Float? = null,
+    mirrorInRtl: Boolean = true,
     effect: SfSymbolEffect? = null,
     repeat: SfEffectRepeat? = null,
     trigger: Any? = null,
@@ -89,28 +102,45 @@ public fun SfSymbolIcon(
     val time = remember { mutableFloatStateOf(-1f) }
     LaunchedEffect(effect, trigger, active, repeat, current) { runEffect(time, effect, current, repeat, active) }
 
-    val geo = remember(current, weight) { SfGeometry(current, weight) }
-    val outGeo = outgoing?.let { o -> remember(o, weight) { SfGeometry(o, weight) } }
+    val geo = remember(current, weight, scale) { SfGeometry(current, weight, scale) }
+    val outGeo = outgoing?.let { o -> remember(o, weight, scale) { SfGeometry(o, weight, scale) } }
 
     val sem = if (contentDescription != null) {
         Modifier.semantics { this.contentDescription = contentDescription; role = Role.Image }
     } else Modifier
     Layout(
         modifier = modifier.then(sem).drawBehind {
-            val t = time.floatValue
-            val sw = swap.floatValue
-            val o = outgoing
-            if (o != null && outGeo != null && sw < 1f) {
-                if (transition == SfSymbolTransition.MagicReplace && morphable(o, current)) {
-                    drawMorph(o, current, weight, sw, tint)
-                } else {
+            val mirror = mirrorInRtl && layoutDirection == LayoutDirection.Rtl && current.mirrorsInRtl
+            withTransform({ if (mirror) scale(-1f, 1f, Offset(this.size.width / 2f, 0f)) }) {
+                val t = time.floatValue
+                val sw = swap.floatValue
+                val o = outgoing
+                if (o != null && outGeo != null && sw < 1f) {
                     val fo = SfFx().also { replaceOut(sw * REPLACE_SECONDS, it) }
                     val fi = SfFx().also { replaceIn(sw * REPLACE_SECONDS, it) }
-                    drawSymbol(outGeo, mode, tint, palette, null, -1f, alpha = fo.alpha, extraScale = fo.scale)
-                    drawSymbol(geo, mode, tint, palette, effect, t, alpha = fi.alpha, extraScale = fi.scale)
+                    val match = if (transition == SfSymbolTransition.MagicReplace) matchLayers(outGeo, geo) else emptyMap()
+                    if (match.isEmpty()) {
+                        drawSymbol(outGeo, mode, tint, palette, gradient, null, -1f, null, alpha = fo.alpha, extraScale = fo.scale)
+                        drawSymbol(geo, mode, tint, palette, gradient, effect, t, variableValue, alpha = fi.alpha, extraScale = fi.scale)
+                    } else {
+                        // matched layers morph over the whole transition; the rest fade out then in
+                        val f = sw
+                        val hideOld = match.values.toSet()
+                        drawSymbol(
+                            outGeo, mode, tint, palette, gradient, null, -1f, null, alpha = 1f, extraScale = 1f,
+                            layerAlpha = { i -> if (i in hideOld) 0f else fo.alpha }, forceLayered = true,
+                        )
+                        val morph = HashMap<Int, Path>()
+                        for ((newIdx, oldIdx) in match) morph[newIdx] = morphLayer(outGeo, oldIdx, geo, newIdx, f)
+                        drawSymbol(
+                            geo, mode, tint, palette, gradient, effect, t, variableValue, alpha = 1f, extraScale = 1f,
+                            layerPath = { i -> morph[i] },
+                            layerAlpha = { i -> if (i in morph) 1f else fi.alpha }, forceLayered = true,
+                        )
+                    }
+                } else {
+                    drawSymbol(geo, mode, tint, palette, gradient, effect, t, variableValue, alpha = 1f, extraScale = 1f)
                 }
-            } else {
-                drawSymbol(geo, mode, tint, palette, effect, t, alpha = 1f, extraScale = 1f)
             }
         },
     ) { _, _ ->
@@ -121,14 +151,17 @@ public fun SfSymbolIcon(
 
 // ---------------------------------------------------------------------------------------------
 
-private class SfGeometry(val symbol: SfSymbol, weight: SfWeight) {
-    val contours: List<Path> = symbol.contourPaths(weight)
+private class SfGeometry(val symbol: SfSymbol, val weight: SfWeight, val scale: SfScale) {
+    val contours: List<Path> = symbol.contourPaths(weight, scale)
     val whole: Path = Path().also { p -> contours.forEach { p.addPath(it) } }
     val layerPaths: List<Path> = symbol.layers.map { l ->
         Path().also { p -> l.contours.forEach { c -> if (c < contours.size) p.addPath(contours[c]) } }
     }
     val layerBounds: List<Rect> = layerPaths.map { it.getBounds() }
-    val bounds: Rect = symbol.bounds(weight)
+    val bounds: Rect = symbol.bounds(weight, scale)
+
+    /** Medium-scale bounds: the size reference, so Small/Large draw smaller/larger than Medium. */
+    val fit: Rect = if (scale == SfScale.Medium) bounds else symbol.bounds(weight, SfScale.Medium)
 }
 
 /** Linear playback of a float from [from] to [to] over |to-from| seconds of wall time. */
@@ -213,32 +246,49 @@ internal fun sfNamedColor(name: String?, tint: Color): Color? = when (name) {
     else -> if (name.startsWith("#") && name.length == 7) hex(name.substring(1).toLong(16)) else tint
 }
 
+/** Fills [path] with [color], or with Apple's automatic top-to-bottom gradient of it. */
+private fun DrawScope.fillPath(path: Path, color: Color, gradient: Boolean, top: Float, bottom: Float) {
+    if (!gradient || color.alpha <= 0f) { drawPath(path, color); return }
+    val (a, b) = sfAutomaticGradient(color)
+    drawPath(path, Brush.verticalGradient(listOf(a, b), startY = top, endY = bottom))
+}
+
 private fun DrawScope.drawSymbol(
-    geo: SfGeometry, mode: SfRenderingMode, tint: Color, palette: List<Color>,
-    effect: SfSymbolEffect?, time: Float, alpha: Float, extraScale: Float,
+    geo: SfGeometry, mode: SfRenderingMode, tint: Color, palette: List<Color>, gradient: Boolean,
+    effect: SfSymbolEffect?, time: Float, variableValue: Float?, alpha: Float, extraScale: Float,
+    layerPath: (Int) -> Path? = { null },
+    layerAlpha: (Int) -> Float = { 1f },
+    forceLayered: Boolean = false,
 ) {
     val b = geo.bounds
-    val maxDim = max(b.width, b.height)
+    val maxDim = max(geo.fit.width, geo.fit.height)
     if (maxDim <= 0f) return
     val s = min(size.width, size.height) / maxDim * extraScale
     val ox = (size.width - b.width * s) / 2f - b.left * s
     val oy = (size.height - b.height * s) / 2f - b.top * s
     val playing = effect != null && (time >= 0f || effect.isHeld())
-    val layered = mode != SfRenderingMode.Monochrome || playing || alpha < 1f || geo.symbol.hasErasers
+    val sym = geo.symbol
+    val layered = mode != SfRenderingMode.Monochrome || playing || alpha < 1f || sym.hasErasers ||
+        variableValue != null || forceLayered
     withTransform({ translate(ox, oy); scale(s, s, Offset.Zero) }) {
         if (!layered) {
-            drawPath(geo.whole, tint)
+            fillPath(geo.whole, tint, gradient, b.top, b.bottom)
             return@withTransform
         }
-        val sym = geo.symbol
         val layers = sym.layers
-        val pad = maxDim
+        val pad = max(b.width, b.height)
         drawContext.canvas.saveLayer(Rect(b.left - pad, b.top - pad, b.right + pad, b.bottom + pad), Paint().apply { this.alpha = alpha })
         val fx = SfFx()
         val tt = max(0f, time)
+        val variable = variableValue?.let { sfVariableLevels(sym, it) }
         for (i in layers.indices) {
             fx.reset()
             if (playing) applyEffect(effect, tt, i, sym, fx)
+            if (variable != null) {
+                fx.alpha *= variable.alpha[i]
+                fx.draw = min(fx.draw, variable.draw[i])
+            }
+            fx.alpha *= layerAlpha(i)
             if (fx.alpha <= 0.001f) continue
             val lb = geo.layerBounds[i]
             val px = if (fx.pivotX.isNaN()) b.center.x else b.left + fx.pivotX * b.width
@@ -250,7 +300,7 @@ private fun DrawScope.drawSymbol(
                 if (fx.scale != 1f) scale(fx.scale, fx.scale, pivot)
             }) {
                 val layer = layers[i]
-                val path = geo.layerPaths[i]
+                val path = layerPath(i) ?: geo.layerPaths[i]
                 if (layer.erases) drawPath(path, Color.Black, blendMode = BlendMode.Clear)
                 val c = layerColor(layer, mode, tint, palette)
                 if (c != null) {
@@ -266,11 +316,11 @@ private fun DrawScope.drawSymbol(
                             )
                             val r = far * fx.draw
                             val disc = Path().apply { addOval(Rect(cx - r, cy - r, cx + r, cy + r)) }
-                            clipPath(disc) { drawPath(path, col) }
+                            clipPath(disc) { fillPath(path, col, gradient, b.top, b.bottom) }
                         } else {
-                            drawPath(path, col.copy(alpha = col.alpha * fx.draw))
+                            fillPath(path, col.copy(alpha = col.alpha * fx.draw), gradient, b.top, b.bottom)
                         }
-                    } else drawPath(path, col)
+                    } else fillPath(path, col, gradient, b.top, b.bottom)
                 }
             }
         }
@@ -278,27 +328,64 @@ private fun DrawScope.drawSymbol(
     }
 }
 
-private fun morphable(a: SfSymbol, b: SfSymbol): Boolean =
-    a.glyph.ops.contentEquals(b.glyph.ops)
+// ---- MagicReplace: match layers by Apple tag + identical outline structure, then morph their points
 
-private fun DrawScope.drawMorph(a: SfSymbol, b: SfSymbol, weight: SfWeight, f: Float, tint: Color) {
-    val pa = a.points(weight)
-    val pb = b.points(weight)
-    val pts = FloatArray(pa.size) { pa[it] + (pb[it] - pa[it]) * f }
-    val path = Path()
-    var k = 0
-    for (op in a.glyph.ops) when (op.toInt()) {
-        0 -> { path.moveTo(pts[k], pts[k + 1]); k += 2 }
-        1 -> { path.lineTo(pts[k], pts[k + 1]); k += 2 }
-        2 -> { path.cubicTo(pts[k], pts[k + 1], pts[k + 2], pts[k + 3], pts[k + 4], pts[k + 5]); k += 6 }
-        else -> path.close()
+/** newLayerIndex -> oldLayerIndex for layers that share a tag and have the same outline structure. */
+private fun matchLayers(old: SfGeometry, new: SfGeometry): Map<Int, Int> {
+    val oldL = old.symbol.layers
+    val newL = new.symbol.layers
+    val used = HashSet<Int>()
+    val out = LinkedHashMap<Int, Int>()
+    for (j in newL.indices) {
+        if (newL[j].erases) continue
+        for (i in oldL.indices) {
+            if (i in used || oldL[i].erases) continue
+            if (oldL[i].tags.intersect(newL[j].tags).isEmpty()) continue
+            if (layerSignature(old.symbol, i) != layerSignature(new.symbol, j)) continue
+            used += i; out[j] = i
+            break
+        }
     }
-    val bb = path.getBounds()
-    val maxDim = max(bb.width, bb.height)
-    if (maxDim <= 0f) return
-    val s = min(size.width, size.height) / maxDim
-    withTransform({
-        translate((size.width - bb.width * s) / 2f - bb.left * s, (size.height - bb.height * s) / 2f - bb.top * s)
-        scale(s, s, Offset.Zero)
-    }) { drawPath(path, tint) }
+    return out
+}
+
+private fun layerSignature(sym: SfSymbol, layer: Int): List<List<Byte>> =
+    sym.layers[layer].contours.map { c -> sym.contourOps(c) }
+
+/** The new layer's outline with every point moved a fraction [f] of the way from the old layer's outline. */
+private fun morphLayer(old: SfGeometry, oldLayer: Int, new: SfGeometry, newLayer: Int, f: Float): Path {
+    val po = old.symbol.points(old.weight, old.scale)
+    val pn = new.symbol.points(new.weight, new.scale)
+    val path = Path()
+    val oc = old.symbol.layers[oldLayer].contours
+    val nc = new.symbol.layers[newLayer].contours
+    val bo = old.bounds
+    val bn = new.bounds
+    val so = 1f
+    for (k in nc.indices) {
+        val ops = new.symbol.contourOps(nc[k])
+        var io = old.symbol.contourStart(oc[k])
+        var inn = new.symbol.contourStart(nc[k])
+        // bring the old outline into the new symbol's frame (same centre, scaled by the size ratio)
+        val ratio = max(new.fit.width, new.fit.height).let { n -> max(old.fit.width, old.fit.height) / n }
+        fun mapX(x: Float) = (x - bo.center.x) / ratio * so + bn.center.x
+        fun mapY(y: Float) = (y - bo.center.y) / ratio * so + bn.center.y
+        fun lx(a: Float, b: Float) = a + (b - a) * f
+        for (op in ops) {
+            when (op.toInt()) {
+                0 -> { path.moveTo(lx(mapX(po[io]), pn[inn]), lx(mapY(po[io + 1]), pn[inn + 1])); io += 2; inn += 2 }
+                1 -> { path.lineTo(lx(mapX(po[io]), pn[inn]), lx(mapY(po[io + 1]), pn[inn + 1])); io += 2; inn += 2 }
+                2 -> {
+                    path.cubicTo(
+                        lx(mapX(po[io]), pn[inn]), lx(mapY(po[io + 1]), pn[inn + 1]),
+                        lx(mapX(po[io + 2]), pn[inn + 2]), lx(mapY(po[io + 3]), pn[inn + 3]),
+                        lx(mapX(po[io + 4]), pn[inn + 4]), lx(mapY(po[io + 5]), pn[inn + 5]),
+                    )
+                    io += 6; inn += 6
+                }
+                else -> path.close()
+            }
+        }
+    }
+    return path
 }

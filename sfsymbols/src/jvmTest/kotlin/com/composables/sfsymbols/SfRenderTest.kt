@@ -7,6 +7,8 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import org.jetbrains.skia.EncodedImageFormat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -142,6 +144,87 @@ class SfRenderTest {
         assertEquals(8f / 60f, drawSeconds(0f), 0.002f)
         assertEquals(1.0f, drawSeconds(581.79f), 0.01f)
         assertTrue(drawSeconds(100f) in 0.2f..0.8f)
+    }
+
+
+    @Test
+    fun metadataFromApple() {
+        val heartFill = SfSymbol["heart.fill"]
+        assertTrue(heartFill.releases["iOS"]?.isNotEmpty() == true)
+        assertEquals("heart", heartFill.base?.name)
+        assertTrue(SfSymbol["heart"].variants.any { it.name == "heart.fill" })
+        val weather = SfSymbol.allCategories.first { it.key == "weather" }
+        assertTrue(weather.title("de") != weather.label || weather.title("de").isNotEmpty())
+        assertEquals("Wetter", weather.title("de"))
+        assertTrue(SfSymbol["wifi"].layers.any { it.tags.isNotEmpty() })
+        assertEquals("video.badge.questionmark.ar", SfSymbol["video.badge.questionmark"].localized("ar").name)
+        assertTrue(SfSymbol.search("planner").isNotEmpty()) // from Apple's enhanced keywords
+    }
+
+    @Test
+    fun opticalScalesDifferInSize() {
+        for (n in listOf("heart.fill", "wifi", "gearshape")) {
+            val s = SfSymbol[n]
+            val sm = s.bounds(SfWeight.Regular, SfScale.Small).width
+            val md = s.bounds(SfWeight.Regular, SfScale.Medium).width
+            val lg = s.bounds(SfWeight.Regular, SfScale.Large).width
+            assertTrue("$n small<medium<large: $sm $md $lg", sm < md && md < lg)
+        }
+    }
+
+    @Test
+    fun gradientMatchesApplesAlgorithm() {
+        // mid-lightness blue: lighter stop first, original last
+        val blue = Color(0xFF007AFF)
+        val (a, b) = sfAutomaticGradient(blue)
+        assertEquals(blue, b)
+        assertTrue(a.green > blue.green && a.blue >= blue.blue)
+        // very light colour: original first, darkened second
+        val (w0, w1) = sfAutomaticGradient(Color(0xFFF2F2F7))
+        assertEquals(Color(0xFFF2F2F7), w0)
+        assertTrue(w1.red < w0.red)
+    }
+
+    @Test
+    fun variableValueLightsLayersInOrder() {
+        val wifi = SfSymbol["wifi"]
+        val none = sfVariableLevels(wifi, 0f)
+        val all = sfVariableLevels(wifi, 1f)
+        val mid = sfVariableLevels(wifi, 0.5f)
+        assertTrue(none.alpha.all { it < 1f })
+        assertTrue(all.alpha.all { it == 1f })
+        assertTrue(mid.alpha.count { it == 1f } in 1..2)
+    }
+
+    @Test
+    fun rtlMirrorsFlaggedSymbols() {
+        val sym = SfSymbol.all.first { it.mirrorsInRtl && it.bounds().let { b -> b.width > 0 } && !it.isLocaleVariant }
+        fun cx(dir: androidx.compose.ui.unit.LayoutDirection): Double {
+            val scene = ImageComposeScene(160, 160, Density(1f), layoutDirection = dir) {
+                SfSymbolIcon(sym, modifier = Modifier.layout { m, c -> val p = m.measure(c); layout(c.maxWidth, c.maxHeight) { p.place(30, 30) } }, size = 100.dp)
+            }
+            val img = ImageIO.read(ByteArrayInputStream(scene.render(0L).encodeToData(EncodedImageFormat.PNG)!!.bytes)); scene.close()
+            var sx = 0.0; var n = 0
+            for (y in 0 until img.height) for (x in 0 until img.width) if ((img.getRGB(x, y) ushr 24) > 40) { sx += x; n++ }
+            return sx / n
+        }
+        val ltr = cx(androidx.compose.ui.unit.LayoutDirection.Ltr)
+        val rtl = cx(androidx.compose.ui.unit.LayoutDirection.Rtl)
+        // mirrored about the 100 px wide slot starting at x=30 (slot centre 80 -> no: the flip is about the slot's own centre)
+        assertTrue("ltr=$ltr rtl=$rtl for ${sym.name}", kotlin.math.abs(ltr - rtl) > 0.5 || sym.bounds().width < 2f)
+    }
+
+    @Test
+    fun magicReplaceAndModesRenderWithoutError() {
+        var s by androidx.compose.runtime.mutableStateOf(SfSymbol["checkmark.circle.fill"])
+        val scene = ImageComposeScene(120, 120, Density(1f)) {
+            SfSymbolIcon(s, size = 80.dp, mode = SfRenderingMode.Multicolor, gradient = true, scale = SfScale.Large,
+                variableValue = 0.7f, transition = SfSymbolTransition.MagicReplace)
+        }
+        scene.render(0L)
+        s = SfSymbol["xmark.circle.fill"]
+        for (ms in 16..600 step 32) scene.render(ms * 1_000_000L)
+        scene.close()
     }
 
     @Test

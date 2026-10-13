@@ -191,6 +191,31 @@ private fun drawStart(symbol: SfSymbol, group: Int, off: Boolean): Float =
 
 private fun layerStep(maxStep: Float, budget: Float, groups: Int): Float = min(maxStep, budget / groups)
 
+/** Per-layer alpha / draw fractions for a variable value (0..1), e.g. the lit bars of wifi. */
+internal class SfVariableLevels(val alpha: FloatArray, val draw: FloatArray)
+
+/** Variable layers in the order they light up. */
+internal fun sfVariableOrder(symbol: SfSymbol): List<Int> =
+    variableLayers(symbol.layers).let { if (symbol.backToFront) it else it.reversed() }
+
+/**
+ * Layer `pos` of `m` lights once the value passes `pos / m` (0 shows none, 1 shows all); inactive layers dim to 30 %.
+ * Layers that support variable draw are instead drawn by the fraction `value * m - pos`.
+ */
+internal fun sfVariableLevels(symbol: SfSymbol, value: Float): SfVariableLevels {
+    val layers = symbol.layers
+    val seq = sfVariableOrder(symbol)
+    val m = max(1, seq.size)
+    val v = value.coerceIn(0f, 1f)
+    val alpha = FloatArray(layers.size) { 1f }
+    val draw = FloatArray(layers.size) { 1f }
+    seq.forEachIndexed { pos, i ->
+        if (layers[i].variableDraw) draw[i] = (v * m - pos).coerceIn(0f, 1f)
+        else alpha[i] = if (v > pos.toFloat() / m) 1f else 0.3f
+    }
+    return SfVariableLevels(alpha, draw)
+}
+
 private fun variableLayers(layers: List<SfLayer>): List<Int> {
     val auto = layers.indices.filter { layers[it].autoVariable }
     return auto.ifEmpty { layers.indices.filter { layers[it].hierarchicalLevel >= 0 && !layers[it].erases } }
@@ -265,7 +290,7 @@ internal fun applyEffect(e: SfSymbolEffect, t: Float, i: Int, symbol: SfSymbol, 
             }
         }
         is SfSymbolEffect.VariableColor -> {
-            val seq = variableLayers(layers).let { if (symbol.backToFront) it else it.reversed() }
+            val seq = sfVariableOrder(symbol)
             val pos = seq.indexOf(i)
             if (pos >= 0) {
                 val total = (seq.size + 1) * VC_SLOT

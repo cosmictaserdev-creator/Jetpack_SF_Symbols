@@ -2,10 +2,10 @@
 package com.composables.sfsymbols.core.data
 
 internal const val SF_PIECES_PER_FILE = 24
-internal const val SF_BLOCK_COUNT = 72
+internal const val SF_BLOCK_COUNT = 105
 
 /** First piece index of each block (plus a terminating entry). */
-internal val SF_BLOCK_START = intArrayOf(0, 2, 4, 6, 8, 10, 12, 15, 17, 19, 21, 23, 25, 28, 31, 33, 35, 37, 39, 41, 44, 47, 49, 51, 53, 55, 58, 60, 62, 64, 67, 69, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 103, 105, 107, 109, 111, 113, 115, 118, 120, 122, 124, 126, 127, 129, 131, 133, 135, 137, 139, 141, 143, 145, 147, 149, 151, 152)
+internal val SF_BLOCK_START = intArrayOf(0, 2, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 28, 31, 34, 36, 38, 40, 42, 45, 48, 50, 52, 54, 56, 58, 60, 62, 64, 67, 69, 72, 75, 77, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 101, 103, 105, 107, 109, 111, 113, 115, 118, 120, 122, 124, 126, 128, 130, 132, 134, 136, 138, 140, 142, 144, 146, 149, 151, 153, 155, 156, 158, 160, 162, 164, 166, 168, 170, 172, 174, 176, 178, 180, 182, 184, 186, 188, 190, 192, 194, 196, 198, 200, 202, 204, 206, 208, 210, 212, 214, 216, 218, 219)
 
 internal fun sfBlobPiece(i: Int): String = when (i / SF_PIECES_PER_FILE) {
     0 -> SfBlobs0[i % SF_PIECES_PER_FILE]
@@ -15,5 +15,8 @@ internal fun sfBlobPiece(i: Int): String = when (i / SF_PIECES_PER_FILE) {
     4 -> SfBlobs4[i % SF_PIECES_PER_FILE]
     5 -> SfBlobs5[i % SF_PIECES_PER_FILE]
     6 -> SfBlobs6[i % SF_PIECES_PER_FILE]
+    7 -> SfBlobs7[i % SF_PIECES_PER_FILE]
+    8 -> SfBlobs8[i % SF_PIECES_PER_FILE]
+    9 -> SfBlobs9[i % SF_PIECES_PER_FILE]
     else -> error("bad piece $i")
 }

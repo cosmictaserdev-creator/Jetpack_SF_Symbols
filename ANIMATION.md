@@ -8,6 +8,7 @@ unchanged. This page covers the second API, a real symbol engine built on `SfSym
 | Symbols | 7,007 | **8,526** (current SF Symbols release) |
 | Names | numeric-mangled (`SF00Circle`) | real Apple names (`"0.circle"`) + the old names still resolve |
 | Weights | 1 | **9** (Ultralight … Black), exact variable-font interpolation |
+| Scales | 1 | Small / Medium / Large optical variants |
 | Rendering modes | dualtone / mono | Monochrome, Hierarchical, Palette, Multicolor |
 | Layers | flattened | Apple's real layer tree (knock-outs, groups, pulse/rotate/variable flags) |
 | Animation | none | 11 effects + symbol transitions |
@@ -44,17 +45,33 @@ symbol.legacyName                 // "SFHeartFill" — property name in the old 
 symbol.since, symbol.keywords, symbol.categories, symbol.layers, symbol.hasExactLayers
 ```
 
+### More from Apple's data
+
+```kotlin
+symbol.releases              // {"iOS": "16.0", "macOS": "13.0", ...} for the release it shipped in
+symbol.hierarchicalSince     // release key from which hierarchical rendering exists
+symbol.variants / symbol.base // heart <-> heart.fill
+symbol.localized("ar")       // Apple's Arabic / RTL / Hindi / Japanese ... variant, or the symbol itself
+symbol.layers[0].tags        // Apple's semantic layer tags
+SfSymbol.allCategories.first { it.key == "weather" }.title("de")   // "Wetter" (38 languages)
+SfSymbol.search("planner")   // searches Apple's search + enhanced keyword sets
+```
+
 ### Parameters of `SfSymbolIcon`
 
 | Parameter | Meaning |
 |---|---|
 | `weight` | `SfWeight.Ultralight … Black` |
+| `scale` | `SfScale.Small / Medium / Large`: Apple's optically-adjusted outlines, drawn smaller / larger than Medium for the same `size` |
+| `gradient` | Apple's automatic gradient: lighter at the top (darker for very light colours), computed with the SF Symbols app's own formula |
+| `variableValue` | 0..1 fill for variable symbols (wifi bars, speaker waves); variable-draw layers draw partially |
+| `mirrorInRtl` | flips symbols Apple marks as mirroring in right-to-left layouts (default on) |
 | `mode` | `Monochrome`, `Hierarchical` (primary 100 % / secondary 50 % / tertiary 25 %), `Palette` (`palette = listOf(...)`), `Multicolor` (Apple's own layer colours; `tint` for tint-coloured layers) |
 | `effect` | an `SfSymbolEffect`, or `null` |
 | `repeat` | `null` = the effect's natural behaviour; `Once`, `Times(n)`, `Continuous` |
 | `trigger` | discrete effects replay whenever this value changes (a counter, a state value…) |
 | `active` | stops continuous effects when `false`; for state effects it applies (`true`) or reverts (`false`) them |
-| `transition` | `None`, `Replace`, `MagicReplace` — how a changed `symbol` animates |
+| `transition` | `None`, `Replace`, `MagicReplace` (layers sharing an Apple tag and outline structure morph, the rest fade) |
 
 ## Effects
 
@@ -122,6 +139,8 @@ This is a static monochrome vector (no layers or animation).
   scale-down value (0.75).
 - 183 symbols use merged outlines whose layer data doesn't map onto the glyph; they render correctly but as one
   layer, so by-layer effects treat them as a single piece (`symbol.hasExactLayers == false`).
+- Small/Large scales store the regular master exactly and derive the other weights from the same affine map
+  (error <= ~0.4 % of an em).
 - Geometry is decoded lazily from compact packed blocks; keep symbol access on the UI thread.
 - Compiles for JVM, Android, JS and wasm; the iOS targets weren't built (needs macOS).
 - `preview.html` (generated locally) is a live browser preview of every symbol, weight, mode and effect.
