@@ -60,7 +60,11 @@ public sealed class SfSymbolEffect {
         public val hideInactiveLayers: Boolean = false,
     ) : SfSymbolEffect()
 
-    public class Scale(public val up: Boolean = true) : SfSymbolEffect()
+    /**
+     * Scales to 1.25x (up) or 0.5x (down). By default it holds that state while active; `returns = true` plays
+     * Apple's preview timing instead: scale over 0.25 s, hold 0.5 s, return over 0.25 s.
+     */
+    public class Scale(public val up: Boolean = true, public val returns: Boolean = false) : SfSymbolEffect()
 
     /**
      * `Forward` / `Backward` follow the layout direction (forward = right in LTR, left in RTL).
@@ -137,6 +141,7 @@ private val BOUNCE_C = SfCurve(0.25f, 0f, 0.55f, 1f)
 private val WIGGLE_1 = SfCurve(0.55f, 0f, 0.67f, 1f)
 private val BREATHE_SCALE = SfCurve(0.4f, 0f, 0.6f, 1f)
 private val SCALE_DOWN = SfCurve(0.75f, 0f, 0.65f, 1f)
+private val SCALE_BACK = SfCurve(0.35f, 0f, 0.25f, 1f)
 private val ROTATE_ONCE = SfCurve(0.25f, 0.25f, 0.25f, 1f)
 private val ROTATE_LINEAR = SfCurve(0.17f, 0.17f, 0.83f, 0.83f)
 private val DRAW_ON = SfCurve(0.2f, 0f, 0.25f, 1f)
@@ -192,11 +197,15 @@ public enum class SfReplaceDirection {
 
     /** Old symbol is removed at once; the new one grows and fades in. */
     OffUp,
+
+    /** Old symbol grows to 1.25x and fades while the new one grows in at the same time. */
+    UpUp,
 }
 
 private val REPLACE_DOWN = SfCurve(0.75f, 0f, 0.8f, 1f)
 private val REPLACE_GROW = SfCurve(0.2f, 0f, 0.25f, 1f)
 private val REPLACE_FADE = SfCurve(0.17f, 0.17f, 0.67f, 1f)
+private val REPLACE_UP = SfCurve(0.33f, 0f, 0.83f, 0.83f)
 
 /** Seconds a replace takes. DownUp: 0.25 s out, 0.25 s in (Apple's whole-symbol recipe cuts at 0.25 s). */
 internal fun replaceSeconds(d: SfReplaceDirection): Float = if (d == SfReplaceDirection.DownUp) 0.5f else 0.25f
@@ -204,6 +213,11 @@ internal fun replaceSeconds(d: SfReplaceDirection): Float = if (d == SfReplaceDi
 /** Outgoing symbol at time [t]: 1 -> 0.5x along Apple's down curve, then removed. */
 internal fun replaceOut(t: Float, d: SfReplaceDirection, fx: SfFx) {
     if (d == SfReplaceDirection.OffUp) { fx.alpha = 0f; return }
+    if (d == SfReplaceDirection.UpUp) {
+        fx.scale = 1f + 0.25f * REPLACE_UP.ease(t / 0.25f)
+        fx.alpha = 1f - EASE.ease(t / 0.25f)
+        return
+    }
     fx.scale = 1f - 0.5f * REPLACE_DOWN.ease(t / 0.25f)
     fx.alpha = if (t >= 0.25f) 0f else 1f - REPLACE_FADE.ease((t - 0.0833f) / 0.1667f)
 }
@@ -228,7 +242,7 @@ internal fun SfSymbolEffect.defaultRepeat(): SfEffectRepeat = when {
 
 /** Effects that leave the symbol in a changed state after playing. */
 internal fun SfSymbolEffect.isHeld(): Boolean = this is SfSymbolEffect.Appear || this is SfSymbolEffect.Disappear ||
-    this is SfSymbolEffect.Scale || this is SfSymbolEffect.DrawOn || this is SfSymbolEffect.DrawOff
+    (this is SfSymbolEffect.Scale && !returns) || this is SfSymbolEffect.DrawOn || this is SfSymbolEffect.DrawOff
 
 /** Seconds one animation group needs to draw (on) / erase (off). */
 private fun groupDrawSeconds(symbol: SfSymbol, group: Int, off: Boolean): Float =
@@ -281,7 +295,7 @@ internal fun effectDuration(e: SfSymbolEffect, symbol: SfSymbol): Float = when (
         val k = max(1, variableLayers(symbol.layers).size)
         (k + 1) * VC_SLOT * (if (e.reversing) 2f else 1f)
     }
-    is SfSymbolEffect.Scale -> 0.25f
+    is SfSymbolEffect.Scale -> if (e.returns) 1.0f else 0.25f
     is SfSymbolEffect.Wiggle -> if (e.continuous) WIGGLE_LOOP else 5 * WIGGLE_SEG
     is SfSymbolEffect.Rotate -> 2.0f
     is SfSymbolEffect.Breathe -> 3.0f
@@ -357,8 +371,13 @@ internal fun applyEffect(e: SfSymbolEffect, t: Float, i: Int, symbol: SfSymbol, 
         }
         is SfSymbolEffect.Scale -> {
             // Apple: up -> 1.25x along (0.33, 0, 0.67, 1); down -> 0.5x along (0.75, 0, 0.65, 1), 0.25 s
-            val p = (if (e.up) EASE else SCALE_DOWN).ease(t / 0.25f)
-            fx.scale = 1f + ((if (e.up) 1.25f else 0.5f) - 1f) * p
+            val peak = if (e.up) 1.25f else 0.5f
+            val p = when {
+                !e.returns || t < 0.25f -> (if (e.up) EASE else SCALE_DOWN).ease(t / 0.25f)
+                t < 0.75f -> 1f
+                else -> 1f - (if (e.up) EASE else SCALE_BACK).ease((t - 0.75f) / 0.25f)   // return to 1x
+            }
+            fx.scale = 1f + (peak - 1f) * p
         }
         is SfSymbolEffect.Wiggle -> {
             // damped oscillation: five 0.167 s segments with Apple's amplitudes

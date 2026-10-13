@@ -81,7 +81,7 @@ SfSymbol.search("planner")   // searches Apple's search + enhanced keyword sets
 | `Bounce(direction, scope)` | up/down, whole symbol or staggered by layer |
 | `Pulse(scope)` | dims the symbol's pulse layers (all layers when none are flagged) |
 | `VariableColor(style, reversing, hideInactiveLayers)` | lights layers in Apple's per-symbol order (`Iterative` / `Cumulative`) |
-| `Scale(up)` | holds a scaled state |
+| `Scale(up, returns)` | 1.25x up / 0.5x down; holds the state, or with `returns = true` plays Apple's preview timing (0.25 s in, 0.5 s hold, 0.25 s back) |
 | `Wiggle(direction, continuous)` | `null` = the symbol's own preferred direction (left/right/up/down/clockwise/… or a custom angle) |
 | `Rotate(direction, scope)` | rotates the rotatable layers (whole symbol otherwise) around Apple's rotation anchor |
 | `Breathe(pulsing)` | continuous scale (+ fade) |
@@ -136,10 +136,12 @@ This is a static monochrome vector (no layers or animation).
   Appear/Disappear. `ByLayer` draws the layers one after another.
 - **Replace / MagicReplace** use Apple's replace recipes (`replaceDirection`): `DownUp` shrinks the old symbol to 0.5x
   over 0.25 s (curve 0.75, 0, 0.8, 1) and then grows the new one 0.5x to 1x over 0.25 s (curve 0.2, 0, 0.25, 1);
-  `OffUp` removes the old symbol at once and grows/fades the new one in over 0.25 s. The opacity pairing of the
-  fade is inferred from the record layout. MagicReplace morphs layers that share a tag and outline structure.
-- **Still approximate:** the reveal is computed on a 112×112 raster rather than by Apple's rail clipping. In
-  Apple's preview, Scale holds 0.5 s and returns; here it is a held state. Wiggle `Forward`/`Backward` follow the
+  `OffUp` removes the old symbol at once and grows/fades the new one in over 0.25 s; `UpUp` grows the old symbol to
+  1.25x (curve 0.33, 0, 0.83, 0.83) while it fades and grows the new one in at the same time. The opacity pairing
+  of the fades and UpUp's incoming motion are inferred from the record layout. MagicReplace morphs layers that share a tag and outline structure.
+- **Still approximate:** the reveal is computed on a 112×112 raster by distance through the shape; Apple clips each
+  stroke's outline contour between its rail ties with `RB::Path::ClipStroke`, whose code is inside `CoreGlyphsLib` but
+  hasn't been ported (that needs the tie adjacency rules and the C++ keyframe logic). Wiggle `Forward`/`Backward` follow the
   layout direction as in Apple's code, and custom wiggle angles use Apple's screen convention (270° is up).
 - 162 symbols use merged outlines whose layer data doesn't map onto the glyph; they render correctly but as one
   layer, so by-layer effects treat them as a single piece (`symbol.hasExactLayers == false`).

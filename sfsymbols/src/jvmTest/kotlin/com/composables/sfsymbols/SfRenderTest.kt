@@ -124,6 +124,9 @@ class SfRenderTest {
         // Scale up: 1.25x
         val sc = play("heart.fill", SfSymbolEffect.Scale(), listOf(16, 400))
         assertTrue("scale ink ${sc.map { it.ink }}", sc[1].ink > sc[0].ink * 1.4)
+        // Scale with Apple's preview timing: grow 0.25 s, hold 0.5 s, return 0.25 s
+        val sr = play("heart.fill", SfSymbolEffect.Scale(returns = true), listOf(16, 500, 1150))
+        assertTrue("scale returns ${sr.map { it.ink }}", sr[1].ink > sr[0].ink * 1.4 && sr[2].ink < sr[1].ink * 0.8)
         // Breathe: peaks at 1.5 s
         val br = play("heart.fill", SfSymbolEffect.Breathe(), listOf(16, 1500))
         assertTrue("breathe ink ${br.map { it.ink }}", br[1].ink > br[0].ink * 1.25)
@@ -227,6 +230,14 @@ class SfRenderTest {
         scene.render(0L)
         s = SfSymbol["xmark.circle.fill"]
         for (ms in 16..600 step 32) scene.render(ms * 1_000_000L)
+        for (dir in SfReplaceDirection.values()) {
+            val sc = ImageComposeScene(120, 120, Density(1f)) {
+                SfSymbolIcon(s, size = 80.dp, transition = SfSymbolTransition.Replace, replaceDirection = dir)
+            }
+            sc.render(0L); s = SfSymbol["checkmark.circle.fill"]
+            for (ms in 16..600 step 32) sc.render(ms * 1_000_000L)
+            s = SfSymbol["xmark.circle.fill"]; sc.close()
+        }
         scene.close()
     }
 
