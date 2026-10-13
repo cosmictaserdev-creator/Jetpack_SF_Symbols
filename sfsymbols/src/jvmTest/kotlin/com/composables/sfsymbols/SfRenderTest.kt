@@ -1,0 +1,168 @@
+package com.composables.sfsymbols
+
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.ImageComposeScene
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import org.jetbrains.skia.EncodedImageFormat
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
+import java.io.File
+import javax.imageio.ImageIO
+import kotlin.math.abs
+
+@OptIn(ExperimentalComposeUiApi::class)
+class SfRenderTest {
+    private val out = File("build/sf-preview").also { it.mkdirs() }
+
+    private fun render(px: Int, nanos: Long = 0L, content: @androidx.compose.runtime.Composable () -> Unit): BufferedImage {
+        val scene = ImageComposeScene(px, px, Density(1f), content = content)
+        try {
+            val img = scene.render(nanos)
+            val bytes = img.encodeToData(EncodedImageFormat.PNG)!!.bytes
+            return ImageIO.read(ByteArrayInputStream(bytes))
+        } finally {
+            scene.close()
+        }
+    }
+
+    /** Alpha-bounding box of drawn pixels: [left, top, right, bottom] inclusive, or null if empty. */
+    private fun bbox(img: BufferedImage): IntArray? {
+        var l = img.width; var t = img.height; var r = -1; var b = -1
+        for (y in 0 until img.height) for (x in 0 until img.width) {
+            if ((img.getRGB(x, y) ushr 24) > 40) {
+                if (x < l) l = x; if (x > r) r = x; if (y < t) t = y; if (y > b) b = y
+            }
+        }
+        return if (r < 0) null else intArrayOf(l, t, r, b)
+    }
+
+    @Test
+    fun catalogLoads() {
+        assertTrue(SfSymbol.all.size > 8000)
+        assertEquals("heart.fill", SfSymbol["heart.fill"].name)
+        assertEquals("heart.fill", SfSymbol["SFHeartFill"].name)
+        assertTrue(SfSymbol.search("wifi").isNotEmpty())
+    }
+
+    /** Every symbol, rendered through the real composable, must keep Apple's exact aspect ratio. */
+    @Test
+    fun noSymbolIsStretchedOrClipped() {
+        val px = 160
+        val bad = ArrayList<String>()
+        var empty = 0
+        val subject = if (System.getenv("SF_FULL") != null) SfSymbol.all else SfSymbol.all.filterIndexed { i, _ -> i % 8 == 0 }
+        for (s in subject) {
+            val b = s.bounds(SfWeight.Regular)
+            val img = render(px) { SfSymbolIcon(s, size = 144.dp) }
+            val bb = bbox(img)
+            if (bb == null) { empty++; bad += "${s.name}: EMPTY"; continue }
+            val w = bb[2] - bb[0] + 1
+            val h = bb[3] - bb[1] + 1
+            val scale = 144f / maxOf(b.width, b.height)
+            val ew = b.width * scale
+            val eh = b.height * scale
+            // anti-aliased edge pixels add at most ~1.5px per side
+            if (abs(w - ew) > 3f || abs(h - eh) > 3f) bad += "${s.name}: got ${w}x$h expected %.1fx%.1f".format(ew, eh)
+        }
+        File(out, "aspect-report.txt").writeText("checked=${subject.size} empty=$empty bad=${bad.size}\n" + bad.joinToString("\n"))
+        assertTrue("deformed/empty symbols: ${bad.size}, first: ${bad.take(5)}", bad.isEmpty())
+    }
+
+
+    private class Frame(val top: Int, val left: Int, val ink: Int, val alpha: Long)
+
+    private fun measure(img: BufferedImage): Frame {
+        var t = img.height; var l = img.width; var ink = 0; var a = 0L
+        for (y in 0 until img.height) for (x in 0 until img.width) {
+            val al = img.getRGB(x, y) ushr 24
+            if (al > 40) { ink++; if (y < t) t = y; if (x < l) l = x }
+            a += al
+        }
+        return Frame(t, l, ink, a)
+    }
+
+    /** Plays [effect] and returns one measurement per requested millisecond mark. */
+    private fun play(symbol: String, effect: SfSymbolEffect, marks: List<Int>, repeat: SfEffectRepeat? = null): List<Frame> {
+        val scene = ImageComposeScene(160, 160, Density(1f)) {
+            SfSymbolIcon(
+                SfSymbol[symbol],
+                modifier = Modifier.layout { m, c -> val pl = m.measure(c); layout(c.maxWidth, c.maxHeight) { pl.place(30, 40) } },
+                size = 100.dp, effect = effect, repeat = repeat,
+            )
+        }
+        try {
+            val out = ArrayList<Frame>()
+            var now = 0
+            scene.render(0L)
+            for (m in marks) {
+                while (now < m) { now += 8; val img = scene.render(now * 1_000_000L); if (now >= m) out += measure(ImageIO.read(ByteArrayInputStream(img.encodeToData(EncodedImageFormat.PNG)!!.bytes))) }
+            }
+            return out
+        } finally { scene.close() }
+    }
+
+    @Test
+    fun effectsActuallyAnimate() {
+        // Bounce: rises at ~217 ms, returns by 700 ms
+        val b = play("heart.fill", SfSymbolEffect.Bounce(), listOf(40, 216, 700))
+        assertTrue("bounce should lift the symbol: ${b.map { it.top }}", b[1].top < b[0].top - 8 && b[2].top >= b[0].top - 2)
+        // Appear: fades/scales in over 250 ms
+        val ap = play("heart.fill", SfSymbolEffect.Appear(), listOf(16, 400))
+        assertTrue("appear ink ${ap.map { it.alpha }}", ap[0].alpha < ap[1].alpha / 2)
+        // Pulse: dims to 30 % at 1 s, restored at 2 s
+        val pu = play("wifi", SfSymbolEffect.Pulse(), listOf(16, 1000, 2100))
+        assertTrue("pulse alpha ${pu.map { it.alpha }}", pu[1].alpha < pu[0].alpha * 0.6 && pu[2].alpha > pu[0].alpha * 0.9)
+        // Scale up: 1.25x
+        val sc = play("heart.fill", SfSymbolEffect.Scale(), listOf(16, 400))
+        assertTrue("scale ink ${sc.map { it.ink }}", sc[1].ink > sc[0].ink * 1.4)
+        // Breathe: peaks at 1.5 s
+        val br = play("heart.fill", SfSymbolEffect.Breathe(), listOf(16, 1500))
+        assertTrue("breathe ink ${br.map { it.ink }}", br[1].ink > br[0].ink * 1.25)
+        // Wiggle: moves the bell
+        val wg = play("bell.fill", SfSymbolEffect.Wiggle(), listOf(16, 90))
+        assertTrue("wiggle ${wg.map { it.left to it.top }}", wg[0].left != wg[1].left || wg[0].top != wg[1].top || wg[0].ink != wg[1].ink)
+        // Variable colour: wifi lights up then returns
+        val vc = play("wifi", SfSymbolEffect.VariableColor(), listOf(16, 500, 1500))
+        assertTrue("vc alpha ${vc.map { it.alpha }}", vc[1].alpha != vc[0].alpha)
+        // Draw on grows the ink
+        val dr = play("checkmark", SfSymbolEffect.DrawOn(), listOf(16, 200, 1200))
+        assertTrue("draw ink ${dr.map { it.ink }}", dr[0].ink < dr[1].ink && dr[1].ink < dr[2].ink)
+    }
+
+    @Test
+    fun drawSecondsMatchesApple() {
+        // Apple: 8 frames for a point, 60 frames at 581.79 pt, at 60 fps
+        assertEquals(8f / 60f, drawSeconds(0f), 0.002f)
+        assertEquals(1.0f, drawSeconds(581.79f), 0.01f)
+        assertTrue(drawSeconds(100f) in 0.2f..0.8f)
+    }
+
+    @Test
+    fun writePreviews() {
+        val names = listOf(
+            "heart.fill", "star", "wifi", "cloud.sun.rain.fill", "gearshape", "checkmark", "arrow.clockwise",
+            "plus.circle.fill", "bell.fill", "speaker.wave.3", "battery.100percent", "camera.fill",
+            "figure.stand", "macbook", "rectangle.split.3x1", "airpodspro", "house.fill", "trash", "magnifyingglass", "person.crop.circle.fill",
+        )
+        for (n in names) {
+            val s = SfSymbol.named(n) ?: continue
+            for (w in listOf(SfWeight.Ultralight, SfWeight.Regular, SfWeight.Black)) {
+                val img = render(96) { SfSymbolIcon(s, size = 80.dp, weight = w) }
+                ImageIO.write(img, "png", File(out, "w-$n-${w.name}.png"))
+            }
+            for (m in SfRenderingMode.values()) {
+                val img = render(96) {
+                    SfSymbolIcon(s, size = 80.dp, mode = m, tint = Color(0xFF1C1C1E), palette = listOf(Color(0xFFFF3B30), Color(0xFF007AFF), Color(0xFF34C759)))
+                }
+                ImageIO.write(img, "png", File(out, "m-$n-${m.name}.png"))
+            }
+        }
+    }
+}

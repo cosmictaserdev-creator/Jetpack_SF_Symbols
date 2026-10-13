@@ -140,6 +140,10 @@ SfSymbolsCatalog.search("wifi")                          // every symbol matchin
 SfSymbolsCatalog.findByAppleName("square.and.arrow.up")  // name, categories, restriction flag
 ```
 
+## Weights, rendering modes and animation
+
+The `SfSymbol` / `SfSymbolIcon` engine adds all 9 weights, hierarchical / palette / multicolor rendering and Apple's symbol effects on top of the same symbols. See [ANIMATION.md](ANIMATION.md).
+
 ## More docs
 
 * [INSTALLATION.md](INSTALLATION.md) covers local modules, composite builds and R8.

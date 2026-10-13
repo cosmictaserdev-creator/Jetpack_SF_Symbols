@@ -40,6 +40,15 @@ kotlin {
 
         jvmTest.dependencies {
             implementation(kotlin("test-junit"))
+            // Skia natives for the headless render tests (picked for the machine running them)
+            val os = System.getProperty("os.name").lowercase()
+            val arm = System.getProperty("os.arch").lowercase().let { it.contains("aarch64") || it.contains("arm64") }
+            val skikoOs = when {
+                os.contains("win") -> "windows-x64"
+                os.contains("mac") -> if (arm) "macos-arm64" else "macos-x64"
+                else -> if (arm) "linux-arm64" else "linux-x64"
+            }
+            implementation("org.jetbrains.skiko:skiko-awt-runtime-$skikoOs:0.150.1")
         }
     }
 }
