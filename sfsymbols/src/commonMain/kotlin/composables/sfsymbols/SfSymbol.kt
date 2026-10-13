@@ -43,6 +43,8 @@ public class SfLayer internal constructor(
     internal val variableDraw: Boolean,
     internal val rootU: Float,
     internal val rootV: Float,
+    /** Draw-rail tie midpoints as (u, v) pairs, fractions of the symbol's bounds (y from top). */
+    internal val ties: FloatArray,
     /** Approximate centre-line length of the layer's strokes, in points at a 100 pt symbol. */
     internal val strokeLength: Float,
     /** Index of the animation group this layer belongs to; layers of one group animate together. */
@@ -147,7 +149,7 @@ public class SfSymbol internal constructor(private val info: SfInfo) {
             if (n.children.isEmpty()) {
                 out += SfLayer(
                     n.contours, n.hierarchical, n.monoErase, SfData.colorName(n.colorId), n.opacity,
-                    n.canPulse, n.canRotate, n.autoVariable || n.variableDraw, n.variableDraw, n.rootU, n.rootV,
+                    n.canPulse, n.canRotate, n.autoVariable || n.variableDraw, n.variableDraw, n.rootU, n.rootV, n.ties,
                     n.contours.sumOf { c -> lengths.getOrElse(c) { 0f }.toDouble() }.toFloat() / 2f / 2048f * 100f, g,
                     n.tags.map { SfData.tag(it) }.toSet(),
                 )

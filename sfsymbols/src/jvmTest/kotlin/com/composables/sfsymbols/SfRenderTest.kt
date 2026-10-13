@@ -78,16 +78,16 @@ class SfRenderTest {
     }
 
 
-    private class Frame(val top: Int, val left: Int, val ink: Int, val alpha: Long)
+    private class Frame(val top: Int, val left: Int, val right: Int, val ink: Int, val alpha: Long)
 
     private fun measure(img: BufferedImage): Frame {
-        var t = img.height; var l = img.width; var ink = 0; var a = 0L
+        var t = img.height; var l = img.width; var r = -1; var ink = 0; var a = 0L
         for (y in 0 until img.height) for (x in 0 until img.width) {
             val al = img.getRGB(x, y) ushr 24
-            if (al > 40) { ink++; if (y < t) t = y; if (x < l) l = x }
+            if (al > 40) { ink++; if (y < t) t = y; if (x < l) l = x; if (x > r) r = x }
             a += al
         }
-        return Frame(t, l, ink, a)
+        return Frame(t, l, r, ink, a)
     }
 
     /** Plays [effect] and returns one measurement per requested millisecond mark. */
@@ -136,6 +136,9 @@ class SfRenderTest {
         // Draw on grows the ink
         val dr = play("checkmark", SfSymbolEffect.DrawOn(), listOf(16, 200, 1200))
         assertTrue("draw ink ${dr.map { it.ink }}", dr[0].ink < dr[1].ink && dr[1].ink < dr[2].ink)
+        // the checkmark is drawn from its left end: early on the right tip is still missing
+        val ck = play("checkmark", SfSymbolEffect.DrawOn(), listOf(100, 1200))
+        assertTrue("draw order ${ck.map { it.left to it.right }}", ck[0].right < ck[1].right - 15 && kotlin.math.abs(ck[0].left - ck[1].left) <= 6)
     }
 
     @Test

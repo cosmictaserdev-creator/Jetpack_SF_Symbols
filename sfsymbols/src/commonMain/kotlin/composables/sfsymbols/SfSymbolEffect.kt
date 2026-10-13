@@ -62,8 +62,14 @@ public sealed class SfSymbolEffect {
 
     public class Scale(public val up: Boolean = true) : SfSymbolEffect()
 
-    /** `direction = null` uses the symbol's own preferred wiggle direction. */
-    public class Wiggle(public val direction: SfWiggleDirection? = null) : SfSymbolEffect()
+    /**
+     * `direction = null` uses the symbol's own preferred wiggle direction. `continuous = true` repeats Apple's
+     * continuous waveform (+1, -1, 0, +1, -1, 0 over 0.667 s) until stopped.
+     */
+    public class Wiggle(
+        public val direction: SfWiggleDirection? = null,
+        public val continuous: Boolean = false,
+    ) : SfSymbolEffect()
 
     /**
      * `direction = null` uses the symbol's preferred rotation direction. `continuous = true` spins at a
@@ -129,6 +135,7 @@ private val BOUNCE_B = SfCurve(0.45f, 0f, 0.67f, 1f)
 private val BOUNCE_C = SfCurve(0.25f, 0f, 0.55f, 1f)
 private val WIGGLE_1 = SfCurve(0.55f, 0f, 0.67f, 1f)
 private val BREATHE_SCALE = SfCurve(0.4f, 0f, 0.6f, 1f)
+private val SCALE_DOWN = SfCurve(0.75f, 0f, 0.65f, 1f)
 private val ROTATE_ONCE = SfCurve(0.25f, 0.25f, 0.25f, 1f)
 private val ROTATE_LINEAR = SfCurve(0.17f, 0.17f, 0.83f, 0.83f)
 private val DRAW_ON = SfCurve(0.2f, 0f, 0.25f, 1f)
@@ -140,6 +147,23 @@ private const val WIGGLE_SEG = 0.167f
 private val WIGGLE_MOVE = floatArrayOf(0.06f, -0.04f, 0.03f, -0.025f, 0f)   // em
 private val WIGGLE_TURN = floatArrayOf(10f, -8f, 6f, -5f, 0f)                // degrees
 private const val VC_SLOT = 0.3333f
+private const val WIGGLE_LOOP = 2 * (0.0835f + 0.167f + 0.0835f)
+private val WIGGLE_UP = SfCurve(0.33f, 0f, 0.67f, 1f)
+private val WIGGLE_BACK = SfCurve(0.33f, 0f, 0.88f, 0.83f)
+private val WIGGLE_UP2 = SfCurve(0.12f, 0.17f, 0.67f, 1f)
+
+/** Apple's continuous wiggle waveform: +1 (0.0835 s), -1 (0.167 s), 0 (0.0835 s), then the same again. */
+private fun continuousWiggle(t: Float): Float {
+    val tt = t % WIGGLE_LOOP
+    val half = WIGGLE_LOOP / 2f
+    val local = tt % half
+    val upCurve = if (tt < half) WIGGLE_UP else WIGGLE_UP2
+    return when {
+        local < 0.0835f -> segment(upCurve, 0f, 1f, 0f, 0.0835f, local)
+        local < 0.2505f -> segment(WIGGLE_UP, 1f, -1f, 0.0835f, 0.167f, local)
+        else -> segment(WIGGLE_BACK, -1f, 0f, 0.2505f, 0.0835f, local)
+    }
+}
 
 /**
  * Apple's draw duration for a stroke of [length] points (100 pt symbol): 8..60 frames at 60 fps,
@@ -173,6 +197,7 @@ private fun segment(c: SfCurve, from: Float, to: Float, t0: Float, dur: Float, t
 internal fun SfSymbolEffect.defaultRepeat(): SfEffectRepeat = when {
     this is SfSymbolEffect.Breathe -> SfEffectRepeat.Continuous
     this is SfSymbolEffect.Rotate && continuous -> SfEffectRepeat.Continuous
+    this is SfSymbolEffect.Wiggle && continuous -> SfEffectRepeat.Continuous
     else -> SfEffectRepeat.Once
 }
 
@@ -232,7 +257,7 @@ internal fun effectDuration(e: SfSymbolEffect, symbol: SfSymbol): Float = when (
         (k + 1) * VC_SLOT * (if (e.reversing) 2f else 1f)
     }
     is SfSymbolEffect.Scale -> 0.25f
-    is SfSymbolEffect.Wiggle -> 5 * WIGGLE_SEG
+    is SfSymbolEffect.Wiggle -> if (e.continuous) WIGGLE_LOOP else 5 * WIGGLE_SEG
     is SfSymbolEffect.Rotate -> 2.0f
     is SfSymbolEffect.Breathe -> 3.0f
     is SfSymbolEffect.DrawOn, is SfSymbolEffect.DrawOff -> {
@@ -306,12 +331,14 @@ internal fun applyEffect(e: SfSymbolEffect, t: Float, i: Int, symbol: SfSymbol, 
             }
         }
         is SfSymbolEffect.Scale -> {
-            val p = EASE.ease(t / 0.25f)
-            fx.scale = 1f + (if (e.up) 0.25f else -0.25f) * p
+            // Apple: up -> 1.25x along (0.33, 0, 0.67, 1); down -> 0.5x along (0.75, 0, 0.65, 1), 0.25 s
+            val p = (if (e.up) EASE else SCALE_DOWN).ease(t / 0.25f)
+            fx.scale = 1f + ((if (e.up) 1.25f else 0.5f) - 1f) * p
         }
         is SfSymbolEffect.Wiggle -> {
             // damped oscillation: five 0.167 s segments with Apple's amplitudes
             fun wave(a: FloatArray): Float {
+                if (e.continuous) return continuousWiggle(t) * a[0]
                 if (t >= 5 * WIGGLE_SEG) return 0f
                 val k = min(4, (t / WIGGLE_SEG).toInt().coerceAtLeast(0))
                 val prev = if (k == 0) 0f else a[k - 1]

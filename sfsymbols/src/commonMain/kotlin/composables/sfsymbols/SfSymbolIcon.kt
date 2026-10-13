@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlin.math.abs
-import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
 
@@ -159,6 +158,16 @@ private class SfGeometry(val symbol: SfSymbol, val weight: SfWeight, val scale: 
     }
     val layerBounds: List<Rect> = layerPaths.map { it.getBounds() }
     val bounds: Rect = symbol.bounds(weight, scale)
+
+    private val drawFields = HashMap<Int, SfDrawField?>()
+
+    /** Reveal regions for drawing layer [i] on/off, or null when it has no draw rail. */
+    fun drawField(i: Int): SfDrawField? {
+        if (!drawFields.containsKey(i)) {
+            drawFields[i] = symbol.layers[i].ties.takeIf { it.isNotEmpty() }?.let { buildDrawField(layerPaths[i], bounds, it) }
+        }
+        return drawFields[i]
+    }
 
     /** Medium-scale bounds: the size reference, so Small/Large draw smaller/larger than Medium. */
     val fit: Rect = if (scale == SfScale.Medium) bounds else symbol.bounds(weight, SfScale.Medium)
@@ -290,7 +299,6 @@ private fun DrawScope.drawSymbol(
             }
             fx.alpha *= layerAlpha(i)
             if (fx.alpha <= 0.001f) continue
-            val lb = geo.layerBounds[i]
             val px = if (fx.pivotX.isNaN()) b.center.x else b.left + fx.pivotX * b.width
             val py = if (fx.pivotY.isNaN()) b.center.y else b.top + fx.pivotY * b.height
             val pivot = Offset(px, py)
@@ -306,17 +314,11 @@ private fun DrawScope.drawSymbol(
                 if (c != null) {
                     val col = c.copy(alpha = c.alpha * fx.alpha)
                     if (fx.draw < 0.999f) {
-                        if (!layer.rootU.isNaN()) {
-                            // stroke grows outward from its start point (first rail tie)
-                            val cx = b.left + layer.rootU * b.width
-                            val cy = b.top + layer.rootV * b.height
-                            val far = maxOf(
-                                hypot(cx - lb.left, cy - lb.top), hypot(cx - lb.right, cy - lb.top),
-                                hypot(cx - lb.left, cy - lb.bottom), hypot(cx - lb.right, cy - lb.bottom),
-                            )
-                            val r = far * fx.draw
-                            val disc = Path().apply { addOval(Rect(cx - r, cy - r, cx + r, cy + r)) }
-                            clipPath(disc) { fillPath(path, col, gradient, b.top, b.bottom) }
+                        val field = if (layer.rootU.isNaN()) null else geo.drawField(i)
+                        if (field != null) {
+                            // the stroke is revealed by distance travelled along it from its start rail tie
+                            val k = min(DRAW_LEVELS, (fx.draw * DRAW_LEVELS).toInt())
+                            if (k > 0) clipPath(field.levels[k - 1]) { fillPath(path, col, gradient, b.top, b.bottom) }
                         } else {
                             fillPath(path, col.copy(alpha = col.alpha * fx.draw), gradient, b.top, b.bottom)
                         }

@@ -82,7 +82,7 @@ SfSymbol.search("planner")   // searches Apple's search + enhanced keyword sets
 | `Pulse(scope)` | dims the symbol's pulse layers (all layers when none are flagged) |
 | `VariableColor(style, reversing, hideInactiveLayers)` | lights layers in Apple's per-symbol order (`Iterative` / `Cumulative`) |
 | `Scale(up)` | holds a scaled state |
-| `Wiggle(direction)` | `null` = the symbol's own preferred direction (left/right/up/down/clockwise/… or a custom angle) |
+| `Wiggle(direction, continuous)` | `null` = the symbol's own preferred direction (left/right/up/down/clockwise/… or a custom angle) |
 | `Rotate(direction, scope)` | rotates the rotatable layers (whole symbol otherwise) around Apple's rotation anchor |
 | `Breathe(pulsing)` | continuous scale (+ fade) |
 | `DrawOn(scope)` / `DrawOff(scope)` | strokes grow outward from the stroke's start point; layers without a stroke fade |
@@ -127,16 +127,18 @@ This is a static monochrome vector (no layers or animation).
 - **Where the motion comes from:** durations, easing curves (cubic-Bezier), keyframe values and layer stagger
   are Apple's own, taken from the SF Symbols app: Bounce (0.217 s + 0.217 s + 0.267 s), Appear 0.25 s, Disappear
   0.167 s, Pulse 2 s down to 30 %, Wiggle five 0.167 s segments (10°/-8°/6°/-5° or 0.06/-0.04/0.03/-0.025 em),
-  Rotate 360° in 2 s, Breathe 1.2x over 3 s, Variable Color 0.333 s per layer, Scale 1.25x / 0.75x.
+  Rotate 360° in 2 s, Breathe 1.2x over 3 s, Variable Color 0.333 s per layer, Scale 1.25x (up) / 0.5x (down).
   Offsets (Bounce, Wiggle) are in em, i.e. relative to the symbol's point size, as in Apple's recipes.
 - **Draw On/Off** uses Apple's duration formula (0.13 s for a short stroke up to 1.0 s for a long one, from the
-  stroke's length) and easing curves; strokes grow outward from their first rail point. Layers without a stroke
-  scale and fade like Appear/Disappear. `ByLayer` draws the layers one after another.
+  stroke's length), its easing curves and its draw-rail data: each stroke is revealed by distance travelled through
+  the shape from the rail's start tie, so it follows corners and curves (wifi arcs open from the centre, a
+  checkmark runs left to the corner and on to the tip). Layers without a stroke scale and fade like
+  Appear/Disappear. `ByLayer` draws the layers one after another.
 - **Replace / MagicReplace** are assembled from Apple's Appear and Disappear tables (old symbol out in 0.167 s,
   new symbol in over 0.25 s). MagicReplace morphs outlines when both symbols share a structure.
-- **Still approximate:** the shape of the stroke reveal (a growing disc around the stroke's start rather than
-  Apple's exact rail-by-rail clipping), Wiggle's forward/backward variants (treated as right/left), and Scale's
-  scale-down value (0.75).
+- **Still approximate:** the reveal is computed on a 112×112 raster rather than by Apple's rail clipping, Wiggle's
+  forward/backward variants are treated as right/left, and continuous Wiggle's amplitude is taken from the first
+  swing of the discrete one. In Apple's preview, Scale holds 0.5 s and returns; here it is a held state.
 - 183 symbols use merged outlines whose layer data doesn't map onto the glyph; they render correctly but as one
   layer, so by-layer effects treat them as a single piece (`symbol.hasExactLayers == false`).
 - Small/Large scales store the regular master exactly and derive the other weights from the same affine map

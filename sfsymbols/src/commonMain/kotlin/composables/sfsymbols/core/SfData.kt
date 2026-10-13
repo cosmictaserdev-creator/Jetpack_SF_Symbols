@@ -59,6 +59,8 @@ internal class SfNode(
     /** Draw-on start point as a fraction of the symbol's bounds (y from top), NaN when the layer has no stroke. */
     val rootU: Float,
     val rootV: Float,
+    /** Every draw-rail tie midpoint as (u, v) pairs, fractions of the symbol's bounds (y from top); first = start. */
+    val ties: FloatArray,
     val contours: IntArray,
     /** Apple's semantic tags for the layer (used to match layers when one symbol replaces another). */
     val tags: IntArray,
@@ -289,9 +291,10 @@ internal object SfData {
         val mf = r.u8()
         val cid = r.u8()
         val op = r.u8()
-        val hasRoot = r.u8() == 1
-        val ru = if (hasRoot) r.zz() / 1024f else Float.NaN
-        val rv = if (hasRoot) r.zz() / 1024f else Float.NaN
+        val nTies = r.vi()
+        val ties = FloatArray(nTies * 2) { r.zz() / 1024f }
+        val ru = if (nTies > 0) ties[0] else Float.NaN
+        val rv = if (nTies > 0) ties[1] else Float.NaN
         val contours = IntArray(r.vi()) { r.vi() }
         val tags = IntArray(r.vi()) { r.vi() }
         val children = List(r.vi()) { readNode(r) }
@@ -301,7 +304,7 @@ internal object SfData {
             animateTogether = tf and 32 != 0, variableDraw = tf and 64 != 0, autoVariable = tf and 128 != 0,
             monoErase = mf and 1 != 0, shapeErase = mf and 2 != 0, hierarchical = ((mf shr 2) and 3) - 1,
             colorId = if (cid == 255) -1 else cid, opacity = op / 100f,
-            contours = contours, tags = tags, rootU = ru, rootV = rv, children = children,
+            contours = contours, tags = tags, rootU = ru, rootV = rv, ties = ties, children = children,
         )
     }
 }
