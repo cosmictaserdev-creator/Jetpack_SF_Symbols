@@ -21,7 +21,7 @@
   <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.x-7F52FF.svg?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin"></a>
   <a href="https://developer.android.com/jetpack/compose"><img src="https://img.shields.io/badge/Jetpack%20Compose-2025.02-4285F4.svg?style=flat-square&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose"></a>
   <a href="https://developer.apple.com/sf-symbols/"><img src="https://img.shields.io/badge/SF%20Symbols-7-000000.svg?style=flat-square&logo=apple&logoColor=white" alt="SF Symbols 7"></a>
-  <a href="https://jitpack.io/#cosmictaserdev-creator/Jetpack_SF_Symbols"><img src="https://img.shields.io/badge/JitPack-1.1.0-2DCE89.svg?style=flat-square" alt="JitPack"></a>
+  <a href="https://jitpack.io/#cosmictaserdev-creator/Jetpack_SF_Symbols"><img src="https://img.shields.io/badge/JitPack-1.1.1-2DCE89.svg?style=flat-square" alt="JitPack"></a>
 </p>
 
 <p align="center">
@@ -81,7 +81,7 @@ kotlin {
 }
 ```
 
-Replace `KMP_RELEASE_TAG` with `1.1.0` or newer; versions up to `1.0.4` predate the multiplatform artifacts and the animation engine. For an Android-only app, use the same coordinate in its `dependencies { implementation(...) }` block.
+Replace `KMP_RELEASE_TAG` with `1.1.1` or newer; versions up to `1.0.4` predate the multiplatform artifacts and the animation engine. For an Android-only app, use the same coordinate in its `dependencies { implementation(...) }` block.
 
 **3. Sync Gradle.** That is it.
 
