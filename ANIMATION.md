@@ -141,7 +141,8 @@ This is a static monochrome vector (no layers or animation).
   of the fades and UpUp's incoming motion are inferred from the record layout. MagicReplace morphs layers that share a tag and outline structure.
 - **Still approximate:** the reveal is computed on a 112×112 raster by distance through the shape; Apple clips each
   stroke's outline contour between its rail ties with `RB::Path::ClipStroke`, whose code is inside `CoreGlyphsLib` but
-  hasn't been ported (that needs the tie adjacency rules and the C++ keyframe logic). Wiggle `Forward`/`Backward` follow the
+  hasn't been ported: it is a full geometric stroker (`Clipper::run` splits each segment at keyframes, then emits
+  outline pieces, corner joins, bisections and caps), driven by Swift-side tie/keyframe building. The raster reveal is the substitute. Wiggle `Forward`/`Backward` follow the
   layout direction as in Apple's code, and custom wiggle angles use Apple's screen convention (270° is up).
 - 162 symbols use merged outlines whose layer data doesn't map onto the glyph; they render correctly but as one
   layer, so by-layer effects treat them as a single piece (`symbol.hasExactLayers == false`).
