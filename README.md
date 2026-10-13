@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  All 7,007 Apple SF Symbols as native <code>ImageVector</code>s for Android and Compose Multiplatform.
+  Apple SF Symbols for Android and Compose Multiplatform: native <code>ImageVector</code>s, plus an engine with 8,526 symbols, 9 weights, rendering modes and Apple's symbol animations.
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
   <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.x-7F52FF.svg?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin"></a>
   <a href="https://developer.android.com/jetpack/compose"><img src="https://img.shields.io/badge/Jetpack%20Compose-2025.02-4285F4.svg?style=flat-square&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose"></a>
   <a href="https://developer.apple.com/sf-symbols/"><img src="https://img.shields.io/badge/SF%20Symbols-7-000000.svg?style=flat-square&logo=apple&logoColor=white" alt="SF Symbols 7"></a>
-  <a href="https://jitpack.io/#cosmictaserdev-creator/Jetpack_SF_Symbols"><img src="https://img.shields.io/badge/JitPack-1.0.4-2DCE89.svg?style=flat-square" alt="JitPack"></a>
+  <a href="https://jitpack.io/#cosmictaserdev-creator/Jetpack_SF_Symbols"><img src="https://img.shields.io/badge/JitPack-1.1.0-2DCE89.svg?style=flat-square" alt="JitPack"></a>
 </p>
 
 <p align="center">
@@ -51,6 +51,8 @@
 
 **Costs nothing you do not use.** Icons are built lazily on first use, and R8 removes every symbol your code never references.
 
+**Animated and weighted.** The `SfSymbolIcon` engine plays Apple's symbol effects (Bounce, Pulse, Wiggle, Draw On/Off, Replace and more) with timings and curves taken from Apple's own recipes, and renders all 9 weights and 3 optical scales.
+
 **Cross-platform.** Android (minSdk 21), JVM desktop, iOS devices and Apple silicon simulators, JavaScript, and WebAssembly.
 
 ## Install
@@ -79,7 +81,7 @@ kotlin {
 }
 ```
 
-Replace `1.0.4` with the tag for a release that contains the KMP build; version `1.0.4` predates the multiplatform artifacts. For an Android-only app, use the same coordinate in its `dependencies { implementation(...) }` block.
+Replace `KMP_RELEASE_TAG` with `1.1.0` or newer; versions up to `1.0.4` predate the multiplatform artifacts and the animation engine. For an Android-only app, use the same coordinate in its `dependencies { implementation(...) }` block.
 
 **3. Sync Gradle.** That is it.
 
@@ -142,7 +144,19 @@ SfSymbolsCatalog.findByAppleName("square.and.arrow.up")  // name, categories, re
 
 ## Weights, rendering modes and animation
 
-The `SfSymbol` / `SfSymbolIcon` engine adds all 9 weights, hierarchical / palette / multicolor rendering and Apple's symbol effects on top of the same symbols. See [ANIMATION.md](ANIMATION.md).
+The `SfSymbol` / `SfSymbolIcon` engine adds all 9 weights, hierarchical / palette / multicolor rendering and Apple's symbol effects on top of the symbol set:
+
+```kotlin
+SfSymbolIcon(
+    symbol = SfSymbol["wifi"],
+    weight = SfWeight.Semibold,
+    mode = SfRenderingMode.Hierarchical,
+    effect = SfSymbolEffect.VariableColor(),
+    active = connecting,
+)
+```
+
+Effects: Appear, Disappear, Bounce, Pulse, Variable Color, Scale, Wiggle, Rotate, Breathe, Draw On/Off and Replace / MagicReplace. Open `preview.html` in a browser to try them all. Exact effect values, data sources and the few approximations (Draw On/Off uses a distance-based reveal instead of Apple's outline clipping) are listed in [ANIMATION.md](ANIMATION.md).
 
 ## More docs
 
@@ -172,4 +186,4 @@ The `SfSymbol` / `SfSymbolIcon` engine adds all 9 weights, hierarchical / palett
 
 Built on [`sf-symbols-lib`](https://github.com/phranck/sf-symbols-lib) by [phranck](https://github.com/phranck) and [sf-symbols-lib-jetpackCompose](https://github.com/cosmictaserdev-creator/sf-symbols-lib-jetpackCompose).
 
-The generator and Kotlin bindings are released under the [MIT License](LICENSE). The symbol artwork belongs to Apple Inc. and SF Symbols is an Apple trademark. Read Apple's [SF Symbols license](https://developer.apple.com/sf-symbols/) before shipping these icons in a product, since it limits their use outside Apple platforms. This project is meant for education, interoperability and design research.
+The generator and Kotlin bindings are released under the [MIT License](LICENSE). The symbol artwork belongs to Apple Inc. and SF Symbols is an Apple trademark. Read Apple's [SF Symbols license](https://developer.apple.com/sf-symbols/) before shipping these icons in a product, since it limits their use outside Apple platforms. The engine's symbol data and animation timings were extracted from Apple's SF Symbols app and are Apple's property too. This project is meant for education, interoperability and design research.
