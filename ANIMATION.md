@@ -126,7 +126,7 @@ This is a static monochrome vector (no layers or animation).
 
 - **Where the motion comes from:** durations, easing curves (cubic-Bezier), keyframe values and layer stagger
   are Apple's own, taken from the SF Symbols app: Bounce (0.217 s + 0.217 s + 0.267 s), Appear 0.25 s, Disappear
-  0.167 s, Pulse 2 s down to 30 %, Wiggle five 0.167 s segments (10°/-8°/6°/-5° or 0.06/-0.04/0.03/-0.025 em),
+  0.167 s, Pulse 2 s down to 30 %, Wiggle five 0.167 s segments (10°/-8°/6°/-5° or 0.06/-0.04/0.03/-0.025 em; continuous wiggle 5° / 0.025 em),
   Rotate 360° in 2 s, Breathe 1.2x over 3 s, Variable Color 0.333 s per layer, Scale 1.25x (up) / 0.5x (down).
   Offsets (Bounce, Wiggle) are in em, i.e. relative to the symbol's point size, as in Apple's recipes.
 - **Draw On/Off** uses Apple's duration formula (0.13 s for a short stroke up to 1.0 s for a long one, from the
@@ -134,15 +134,16 @@ This is a static monochrome vector (no layers or animation).
   the shape from the rail's start tie, so it follows corners and curves (wifi arcs open from the centre, a
   checkmark runs left to the corner and on to the tip). Layers without a stroke scale and fade like
   Appear/Disappear. `ByLayer` draws the layers one after another.
-- **Replace / MagicReplace** are assembled from Apple's Appear and Disappear tables (old symbol out in 0.167 s,
-  new symbol in over 0.25 s). MagicReplace morphs outlines when both symbols share a structure.
-- **Still approximate:** the reveal is computed on a 112×112 raster rather than by Apple's rail clipping, Wiggle's
-  forward/backward variants are treated as right/left, and continuous Wiggle's amplitude is taken from the first
-  swing of the discrete one. In Apple's preview, Scale holds 0.5 s and returns; here it is a held state.
-- 183 symbols use merged outlines whose layer data doesn't map onto the glyph; they render correctly but as one
+- **Replace / MagicReplace** use Apple's replace recipes (`replaceDirection`): `DownUp` shrinks the old symbol to 0.5x
+  over 0.25 s (curve 0.75, 0, 0.8, 1) and then grows the new one 0.5x to 1x over 0.25 s (curve 0.2, 0, 0.25, 1);
+  `OffUp` removes the old symbol at once and grows/fades the new one in over 0.25 s. The opacity pairing of the
+  fade is inferred from the record layout. MagicReplace morphs layers that share a tag and outline structure.
+- **Still approximate:** the reveal is computed on a 112×112 raster rather than by Apple's rail clipping. In
+  Apple's preview, Scale holds 0.5 s and returns; here it is a held state. Wiggle `Forward`/`Backward` follow the
+  layout direction as in Apple's code, and custom wiggle angles use Apple's screen convention (270° is up).
+- 162 symbols use merged outlines whose layer data doesn't map onto the glyph; they render correctly but as one
   layer, so by-layer effects treat them as a single piece (`symbol.hasExactLayers == false`).
-- Small/Large scales store the regular master exactly and derive the other weights from the same affine map
-  (error <= ~0.4 % of an em).
+- Small/Large scales are stored exactly for all three weight masters (an affine fit plus integer residuals).
 - Geometry is decoded lazily from compact packed blocks; keep symbol access on the UI thread.
 - Compiles for JVM, Android, JS and wasm; the iOS targets weren't built (needs macOS).
 - `preview.html` (generated locally) is a live browser preview of every symbol, weight, mode and effect.

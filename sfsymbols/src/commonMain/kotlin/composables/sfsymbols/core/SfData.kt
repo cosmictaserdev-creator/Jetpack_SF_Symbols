@@ -228,22 +228,24 @@ internal object SfData {
         if (b < 0) null else glyph(info).let { m -> m.withGeometry(readScaleGeom(Reader(block(b), o), m)) }
     }
 
-    /** Optical-scale outline: affine map of the medium outline plus Regular-master residuals (see sf_encode.py). */
+    /** Optical-scale outline: per master, an affine map of the medium outline plus exact integer residuals. */
     private fun readScaleGeom(r: Reader, m: SfGlyph): SfGeom {
         val n = m.reg.size / 2
-        val reg = FloatArray(n * 2)
-        val lo = FloatArray(n * 2)
-        val hi = FloatArray(n * 2)
-        for (ax in 0..1) {
-            val sq = r.zz()
-            val tq = r.zz()
-            for (i in 0 until n) {
-                val k = i * 2 + ax
-                reg[k] = (((m.reg[k].toInt() * sq + 2048) shr 12) + tq + r.zz()).toFloat()
-                lo[k] = (((m.lo[k].toInt() * sq + 2048) shr 12) + tq).toFloat()
-                hi[k] = (((m.hi[k].toInt() * sq + 2048) shr 12) + tq).toFloat()
+        fun master(med: FloatArray): FloatArray {
+            val out = FloatArray(n * 2)
+            for (ax in 0..1) {
+                val sq = r.zz()
+                val tq = r.zz()
+                for (i in 0 until n) {
+                    val k = i * 2 + ax
+                    out[k] = (((med[k].toInt() * sq + 2048) shr 12) + tq + r.zz()).toFloat()
+                }
             }
+            return out
         }
+        val reg = master(m.reg)
+        val lo = master(m.lo)
+        val hi = master(m.hi)
         return SfGeom(m.ops, reg, lo, hi)
     }
 

@@ -63,6 +63,7 @@ public enum class SfSymbolTransition {
  * @param active pauses/stops continuous effects when false; for state effects (Appear, Disappear,
  * Scale, DrawOn, DrawOff) it applies (true) or reverts (false) the effect.
  * @param transition how a changed [symbol] is animated.
+ * @param replaceDirection which of Apple's replace recipes a transition plays.
  */
 @Composable
 public fun SfSymbolIcon(
@@ -82,18 +83,19 @@ public fun SfSymbolIcon(
     trigger: Any? = null,
     active: Boolean = true,
     transition: SfSymbolTransition = SfSymbolTransition.None,
+    replaceDirection: SfReplaceDirection = SfReplaceDirection.DownUp,
     contentDescription: String? = null,
 ) {
     var current by remember { mutableStateOf(symbol) }
     var outgoing by remember { mutableStateOf<SfSymbol?>(null) }
     val swap = remember { mutableFloatStateOf(1f) }
-    LaunchedEffect(symbol, transition) {
+    LaunchedEffect(symbol, transition, replaceDirection) {
         if (symbol == current) return@LaunchedEffect
         if (transition == SfSymbolTransition.None) {
             outgoing = null; current = symbol; swap.floatValue = 1f
         } else {
             outgoing = current; current = symbol; swap.floatValue = 0f
-            swap.play(0f, 1f, REPLACE_SECONDS)
+            swap.play(0f, 1f, replaceSeconds(replaceDirection))
             outgoing = null
         }
     }
@@ -110,17 +112,18 @@ public fun SfSymbolIcon(
     Layout(
         modifier = modifier.then(sem).drawBehind {
             val mirror = mirrorInRtl && layoutDirection == LayoutDirection.Rtl && current.mirrorsInRtl
+            val mirrored = mirror
             withTransform({ if (mirror) scale(-1f, 1f, Offset(this.size.width / 2f, 0f)) }) {
                 val t = time.floatValue
                 val sw = swap.floatValue
                 val o = outgoing
                 if (o != null && outGeo != null && sw < 1f) {
-                    val fo = SfFx().also { replaceOut(sw * REPLACE_SECONDS, it) }
-                    val fi = SfFx().also { replaceIn(sw * REPLACE_SECONDS, it) }
+                    val fo = SfFx().also { replaceOut(sw * replaceSeconds(replaceDirection), replaceDirection, it) }
+                    val fi = SfFx().also { replaceIn(sw * replaceSeconds(replaceDirection), replaceDirection, it) }
                     val match = if (transition == SfSymbolTransition.MagicReplace) matchLayers(outGeo, geo) else emptyMap()
                     if (match.isEmpty()) {
                         drawSymbol(outGeo, mode, tint, palette, gradient, null, -1f, null, alpha = fo.alpha, extraScale = fo.scale)
-                        drawSymbol(geo, mode, tint, palette, gradient, effect, t, variableValue, alpha = fi.alpha, extraScale = fi.scale)
+                        drawSymbol(geo, mode, tint, palette, gradient, effect, t, variableValue, alpha = fi.alpha, extraScale = fi.scale, mirrored = mirrored)
                     } else {
                         // matched layers morph over the whole transition; the rest fade out then in
                         val f = sw
@@ -138,7 +141,7 @@ public fun SfSymbolIcon(
                         )
                     }
                 } else {
-                    drawSymbol(geo, mode, tint, palette, gradient, effect, t, variableValue, alpha = 1f, extraScale = 1f)
+                    drawSymbol(geo, mode, tint, palette, gradient, effect, t, variableValue, alpha = 1f, extraScale = 1f, mirrored = mirrored)
                 }
             }
         },
@@ -268,6 +271,7 @@ private fun DrawScope.drawSymbol(
     layerPath: (Int) -> Path? = { null },
     layerAlpha: (Int) -> Float = { 1f },
     forceLayered: Boolean = false,
+    mirrored: Boolean = false,
 ) {
     val b = geo.bounds
     val maxDim = max(geo.fit.width, geo.fit.height)
@@ -292,7 +296,7 @@ private fun DrawScope.drawSymbol(
         val variable = variableValue?.let { sfVariableLevels(sym, it) }
         for (i in layers.indices) {
             fx.reset()
-            if (playing) applyEffect(effect, tt, i, sym, fx)
+            if (playing) applyEffect(effect, tt, i, sym, fx, rtl = layoutDirection == LayoutDirection.Rtl && !mirrored)
             if (variable != null) {
                 fx.alpha *= variable.alpha[i]
                 fx.draw = min(fx.draw, variable.draw[i])

@@ -30,7 +30,7 @@ public sealed interface SfWiggleDirection {
     public data object Clockwise : SfWiggleDirection
     public data object CounterClockwise : SfWiggleDirection
 
-    /** Movement along [degrees], counter-clockwise from +x. */
+    /** Movement along [degrees] on screen, measured from +x toward +y (Apple's convention: 0 right, 90 down, 180 left, 270 up). */
     public data class Custom(val degrees: Float) : SfWiggleDirection
 }
 
@@ -63,8 +63,9 @@ public sealed class SfSymbolEffect {
     public class Scale(public val up: Boolean = true) : SfSymbolEffect()
 
     /**
+     * `Forward` / `Backward` follow the layout direction (forward = right in LTR, left in RTL).
      * `direction = null` uses the symbol's own preferred wiggle direction. `continuous = true` repeats Apple's
-     * continuous waveform (+1, -1, 0, +1, -1, 0 over 0.667 s) until stopped.
+     * continuous waveform (+1, -1, 0, +1, -1, 0 over 0.667 s, scaled by 0.025 em or 5 degrees) until stopped.
      */
     public class Wiggle(
         public val direction: SfWiggleDirection? = null,
@@ -146,6 +147,8 @@ private const val BOUNCE_TOTAL = 0.21667f + 0.21667f + 0.26667f
 private const val WIGGLE_SEG = 0.167f
 private val WIGGLE_MOVE = floatArrayOf(0.06f, -0.04f, 0.03f, -0.025f, 0f)   // em
 private val WIGGLE_TURN = floatArrayOf(10f, -8f, 6f, -5f, 0f)                // degrees
+private const val WIGGLE_CONT_MOVE = 0.025f                                      // em (continuous wiggle)
+private const val WIGGLE_CONT_TURN = 5f                                           // degrees (continuous wiggle)
 private const val VC_SLOT = 0.3333f
 private const val WIGGLE_LOOP = 2 * (0.0835f + 0.167f + 0.0835f)
 private val WIGGLE_UP = SfCurve(0.33f, 0f, 0.67f, 1f)
@@ -182,13 +185,35 @@ internal fun drawSeconds(length: Float): Float {
     return (52f * (((-0.77f * u + 0.96f) * u + 0.81f) * u) + 8f) / 60f
 }
 
-/** Replace transition (Apple's down-up recipe): the old symbol disappears, then the new one appears. */
-internal const val REPLACE_SECONDS = 0.1667f + 0.25f
-internal fun replaceOut(t: Float, fx: SfFx) {
-    val p = EASE.ease(t / 0.1667f); fx.alpha = 1f - p; fx.scale = 1f - 0.25f * p
+/** Which of Apple's replace recipes plays when a symbol is swapped. */
+public enum class SfReplaceDirection {
+    /** Old symbol shrinks away, then the new one grows in (the default). */
+    DownUp,
+
+    /** Old symbol is removed at once; the new one grows and fades in. */
+    OffUp,
 }
-internal fun replaceIn(t: Float, fx: SfFx) {
-    val p = EASE.ease((t - 0.1667f) / 0.25f); fx.alpha = p; fx.scale = 0.75f + 0.25f * p
+
+private val REPLACE_DOWN = SfCurve(0.75f, 0f, 0.8f, 1f)
+private val REPLACE_GROW = SfCurve(0.2f, 0f, 0.25f, 1f)
+private val REPLACE_FADE = SfCurve(0.17f, 0.17f, 0.67f, 1f)
+
+/** Seconds a replace takes. DownUp: 0.25 s out, 0.25 s in (Apple's whole-symbol recipe cuts at 0.25 s). */
+internal fun replaceSeconds(d: SfReplaceDirection): Float = if (d == SfReplaceDirection.DownUp) 0.5f else 0.25f
+
+/** Outgoing symbol at time [t]: 1 -> 0.5x along Apple's down curve, then removed. */
+internal fun replaceOut(t: Float, d: SfReplaceDirection, fx: SfFx) {
+    if (d == SfReplaceDirection.OffUp) { fx.alpha = 0f; return }
+    fx.scale = 1f - 0.5f * REPLACE_DOWN.ease(t / 0.25f)
+    fx.alpha = if (t >= 0.25f) 0f else 1f - REPLACE_FADE.ease((t - 0.0833f) / 0.1667f)
+}
+
+/** Incoming symbol at time [t]: waits (DownUp), then grows 0.5x -> 1x along Apple's grow curve while fading in. */
+internal fun replaceIn(t: Float, d: SfReplaceDirection, fx: SfFx) {
+    val start = if (d == SfReplaceDirection.DownUp) 0.25f else 0f
+    val local = t - start
+    fx.scale = 0.5f + 0.5f * REPLACE_GROW.ease(local / 0.25f)
+    fx.alpha = (if (d == SfReplaceDirection.DownUp) REPLACE_FADE.ease(local / 0.1667f) else EASE.ease(local / 0.25f))
 }
 
 private fun segment(c: SfCurve, from: Float, to: Float, t0: Float, dur: Float, t: Float): Float =
@@ -271,7 +296,7 @@ internal fun effectDuration(e: SfSymbolEffect, symbol: SfSymbol): Float = when (
 }
 
 /** Evaluates [e] at time [t] (seconds) for layer [i] of [symbol] into [fx]. */
-internal fun applyEffect(e: SfSymbolEffect, t: Float, i: Int, symbol: SfSymbol, fx: SfFx) {
+internal fun applyEffect(e: SfSymbolEffect, t: Float, i: Int, symbol: SfSymbol, fx: SfFx, rtl: Boolean = false) {
     val layers = symbol.layers
     val groups = symbol.groupCount
     val gi = layers[i].group
@@ -338,7 +363,7 @@ internal fun applyEffect(e: SfSymbolEffect, t: Float, i: Int, symbol: SfSymbol, 
         is SfSymbolEffect.Wiggle -> {
             // damped oscillation: five 0.167 s segments with Apple's amplitudes
             fun wave(a: FloatArray): Float {
-                if (e.continuous) return continuousWiggle(t) * a[0]
+                if (e.continuous) return continuousWiggle(t) * (if (a === WIGGLE_MOVE) WIGGLE_CONT_MOVE else WIGGLE_CONT_TURN)
                 if (t >= 5 * WIGGLE_SEG) return 0f
                 val k = min(4, (t / WIGGLE_SEG).toInt().coerceAtLeast(0))
                 val prev = if (k == 0) 0f else a[k - 1]
@@ -346,8 +371,10 @@ internal fun applyEffect(e: SfSymbolEffect, t: Float, i: Int, symbol: SfSymbol, 
                 return prev + (a[k] - prev) * c.ease((t - k * WIGGLE_SEG) / WIGGLE_SEG)
             }
             when (val dir = e.direction ?: preferredWiggle(symbol)) {
-                SfWiggleDirection.Left, SfWiggleDirection.Backward -> fx.dx = -wave(WIGGLE_MOVE)
-                SfWiggleDirection.Right, SfWiggleDirection.Forward -> fx.dx = wave(WIGGLE_MOVE)
+                SfWiggleDirection.Left -> fx.dx = -wave(WIGGLE_MOVE)
+                SfWiggleDirection.Right -> fx.dx = wave(WIGGLE_MOVE)
+                SfWiggleDirection.Forward -> fx.dx = (if (rtl) -1f else 1f) * wave(WIGGLE_MOVE)
+                SfWiggleDirection.Backward -> fx.dx = (if (rtl) 1f else -1f) * wave(WIGGLE_MOVE)
                 SfWiggleDirection.Up -> fx.dy = -wave(WIGGLE_MOVE)
                 SfWiggleDirection.Down -> fx.dy = wave(WIGGLE_MOVE)
                 SfWiggleDirection.Clockwise -> fx.rot = wave(WIGGLE_TURN)
@@ -355,7 +382,7 @@ internal fun applyEffect(e: SfSymbolEffect, t: Float, i: Int, symbol: SfSymbol, 
                 is SfWiggleDirection.Custom -> {
                     val a = dir.degrees * PI.toFloat() / 180f
                     val w = wave(WIGGLE_MOVE)
-                    fx.dx = cos(a) * w; fx.dy = -sin(a) * w
+                    fx.dx = cos(a) * w; fx.dy = sin(a) * w          // y grows downward
                 }
             }
         }
